@@ -1,0 +1,8 @@
+C:\Users\Melody\Desktop\Programming Stuff\FRUCD\Dashboard-Firmware-FE9\Dashboard-Firmware-FE9\Dashboard.cydsn\Dashboard.cyprj|1d5c489d-3a99-448b-a580-7971bad0e02c
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\default\CyAnnotationLibrary\CyAnnotationLibrary.cylib\CyAnnotationLibrary.cyprj|44468010-95eb-49a1-a8fd-b57a00a285ff
+C:\Users\Melody\Documents\PSoC Creator\4.4\Downloads ( 4.4).cylib\Downloads ( 4.4).cyprj|d3fe2481-62a7-47e6-8b43-77dd7806d24c
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cycomponentlibraryupdates\CyComponentLibraryUpdates.cylib\CyComponentLibraryUpdates.cyprj|9bf197df-d0d9-4f83-a070-95cd92bae74d
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cycomponentlibrary\CyComponentLibrary.cylib\CyComponentLibrary.cyprj|a7aa04a2-fd84-4f92-b801-4a685ec1ecf0
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cyprimitives\CyPrimitives.cylib\CyPrimitives.cyprj|3823f566-1726-4a3b-b1d3-1d279446e4c9
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\dev\psoc4\PSoC4AnalogDevice\psoc4arch.cydsn\psoc4arch.cyprj|9e6f709e-7f20-4ed4-b393-b6af9562e32a
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\default\CyReferenceLibrary\CyReferenceLibrary.cylib\CyReferenceLibrary.cyprj|bf9ab00e-c7ba-4cf6-9952-e3fa1eafd444

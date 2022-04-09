@@ -1,0 +1,1668 @@
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.ISR_CAN,"ax",%progbits
+  20              		.align	2
+  21              		.global	ISR_CAN
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	ISR_CAN, %function
+  25              	ISR_CAN:
+  26              	.LFB36:
+  27              		.file 1 "main.c"
+   1:main.c        **** /*******************************************************************************
+   2:main.c        **** * File Name: main.c
+   3:main.c        **** *
+   4:main.c        **** * Version: 1.0
+   5:main.c        **** *
+   6:main.c        **** * Description:
+   7:main.c        **** *  This example project demonstrates how to configure the CAN Component in
+   8:main.c        **** *  the Full CAN mode.
+   9:main.c        **** *  The CAN component is configured to receive the following messages from the
+  10:main.c        **** *  remote node:
+  11:main.c        **** *   Message 1 - Status of Switch 1.
+  12:main.c        **** *   Message 2 - ADC data.
+  13:main.c        **** *
+  14:main.c        **** *  The component is also configured to transmit data to control the pulse width
+  15:main.c        **** *  of the PWM in the remote node. The transmitted data (pulse width value)
+  16:main.c        **** *  increments at a switch press.
+  17:main.c        **** *  Both transmitted and received data are send out over UART, so that it
+  18:main.c        **** *  can be received on a PC using a USB-UART bridge (PSoC 5LP) on the
+  19:main.c        **** *  CY8CKIT-044  Development Kit and the terminal software.
+  20:main.c        **** *
+  21:main.c        **** *  This is only one part of the CAN example project. Use this along with
+  22:main.c        **** *  CAN_Basic_Example for complete demonstration.
+  23:main.c        **** *
+  24:main.c        **** * Hardware Dependency:
+  25:main.c        **** *  CY8CKIT-044
+  26:main.c        **** *  CY8CKIT-017
+  27:main.c        **** *
+  28:main.c        **** ********************************************************************************
+  29:main.c        **** * Copyright 2015, Cypress Semiconductor Corporation. All rights reserved.
+  30:main.c        **** * This software is owned by Cypress Semiconductor Corporation and is protected
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 2
+
+
+  31:main.c        **** * by and subject to worldwide patent and copyright laws and treaties.
+  32:main.c        **** * Therefore, you may use this software only as provided in the license agreement
+  33:main.c        **** * accompanying the software package from which you obtained this software.
+  34:main.c        **** * CYPRESS AND ITS SUPPLIERS MAKE NO WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+  35:main.c        **** * WITH REGARD TO THIS SOFTWARE, INCLUDING, BUT NOT LIMITED TO, NONINFRINGEMENT,
+  36:main.c        **** * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+  37:main.c        **** *******************************************************************************/
+  38:main.c        **** #include <project.h>
+  39:main.c        **** #include <stdio.h>
+  40:main.c        **** 
+  41:main.c        **** #define PWM_PULSE_WIDTH_STEP        (10u)
+  42:main.c        **** #define SWITCH_PRESSED              (1u)
+  43:main.c        **** 
+  44:main.c        **** #define PWM_MESSAGE_ID              (0x1AAu)
+  45:main.c        **** #define PWM_MESSAGE_IDE             (0u)    /* Standard message */
+  46:main.c        **** #define PWM_MESSAGE_IRQ             (0u)    /* No transmit IRQ */
+  47:main.c        **** #define PWM_MESSAGE_RTR             (0u)    /* No RTR */
+  48:main.c        **** 
+  49:main.c        **** #define CAN_RX_MAILBOX_0_SHIFT      (1u)
+  50:main.c        **** #define CAN_RX_MAILBOX_1_SHIFT      (2u)
+  51:main.c        **** 
+  52:main.c        **** #define TX_DATA_SIZE                (25u)
+  53:main.c        **** 
+  54:main.c        **** #define ONE_BYTE_OFFSET             (8u)
+  55:main.c        **** 
+  56:main.c        **** /* Function prototypes */
+  57:main.c        **** CY_ISR_PROTO(ISR_CAN);
+  58:main.c        **** 
+  59:main.c        **** /* Global variables used to store configuration and data for BASIC CAN mailbox */
+  60:main.c        **** CAN_DATA_BYTES_MSG dataPWM;
+  61:main.c        **** CAN_TX_MSG messagePWM;
+  62:main.c        **** 
+  63:main.c        **** /* Global variable used to store PWM pulse width value  */
+  64:main.c        **** uint8 pulseWidthValue = 0u;
+  65:main.c        **** 
+  66:main.c        **** /* Global variable used to store receive message mailbox number */
+  67:main.c        **** volatile uint8 receiveMailboxNumber = 0xFFu;
+  68:main.c        **** 
+  69:main.c        **** 
+  70:main.c        **** /*******************************************************************************
+  71:main.c        **** * Function Name: main
+  72:main.c        **** ********************************************************************************
+  73:main.c        **** *
+  74:main.c        **** * Summary:
+  75:main.c        **** *  main() performs the following functions:
+  76:main.c        **** *  1: Initializes a structure for the Basic CAN mailbox to send messages.
+  77:main.c        **** *  2: Starts the CAN and UART components.
+  78:main.c        **** *  3: When received Message 1, sends the PWM pulse width and sends
+  79:main.c        **** *     received switch status and value of PWM pulse width over UART; 
+  80:main.c        **** *     When received Message 2, sends the received ADC data over UART.
+  81:main.c        **** *
+  82:main.c        **** * Parameters:
+  83:main.c        **** *  None.
+  84:main.c        **** *
+  85:main.c        **** * Return:
+  86:main.c        **** *  None.
+  87:main.c        **** *
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 3
+
+
+  88:main.c        **** *******************************************************************************/
+  89:main.c        **** int main()
+  90:main.c        **** {
+  91:main.c        ****     char8 txData[TX_DATA_SIZE];
+  92:main.c        ****     uint16 adcData;
+  93:main.c        ****     
+  94:main.c        ****     /* BASIC CAN mailbox configuration */
+  95:main.c        ****     messagePWM.dlc = CAN_TX_DLC_MAX_VALUE;
+  96:main.c        ****     messagePWM.id  = PWM_MESSAGE_ID;
+  97:main.c        ****     messagePWM.ide = PWM_MESSAGE_IDE;
+  98:main.c        ****     messagePWM.irq = PWM_MESSAGE_IRQ;
+  99:main.c        ****     messagePWM.msg = &dataPWM;
+ 100:main.c        ****     messagePWM.rtr = PWM_MESSAGE_RTR;
+ 101:main.c        **** 
+ 102:main.c        ****     UART_Start();
+ 103:main.c        **** 
+ 104:main.c        ****     CAN_Start();
+ 105:main.c        **** 
+ 106:main.c        ****     /* Set CAN interrupt handler to local routine */
+ 107:main.c        ****     CyIntSetVector(CAN_ISR_NUMBER, ISR_CAN);
+ 108:main.c        **** 
+ 109:main.c        ****     CyGlobalIntEnable;
+ 110:main.c        **** 
+ 111:main.c        ****     for(;;)
+ 112:main.c        ****     {
+ 113:main.c        ****         if (receiveMailboxNumber == CAN_RX_MAILBOX_switchStatus)
+ 114:main.c        ****         {
+ 115:main.c        ****             if (CAN_RX_DATA_BYTE1(0u) == SWITCH_PRESSED)
+ 116:main.c        ****             {
+ 117:main.c        ****                 /* Send received switch status over UART */
+ 118:main.c        ****                 UART_UartPutString("Switch 1 pressed.\r\n");
+ 119:main.c        ****                 
+ 120:main.c        ****                 /* Increase the PWM pulse width */
+ 121:main.c        ****                 pulseWidthValue += PWM_PULSE_WIDTH_STEP;
+ 122:main.c        ****                 
+ 123:main.c        ****                 /* Send message with the new PWM pulse width */
+ 124:main.c        ****                 dataPWM.byte[0u] = pulseWidthValue;
+ 125:main.c        ****                 CAN_SendMsg(&messagePWM);
+ 126:main.c        ****                 
+ 127:main.c        ****                 /* Send PWM pulse width over UART */
+ 128:main.c        ****                 sprintf(txData, "PWM pulse width: %X \r\n", pulseWidthValue);
+ 129:main.c        ****                 UART_UartPutString(txData);
+ 130:main.c        ****             }
+ 131:main.c        ****             else
+ 132:main.c        ****             {
+ 133:main.c        ****                 /* Send received switch status over UART */
+ 134:main.c        ****                 UART_UartPutString("Switch 1 released.\r\n");
+ 135:main.c        ****             }
+ 136:main.c        ****             receiveMailboxNumber = 0xFFu;
+ 137:main.c        ****         }
+ 138:main.c        **** 
+ 139:main.c        ****         if (receiveMailboxNumber == CAN_RX_MAILBOX_ADCdata)
+ 140:main.c        ****         {
+ 141:main.c        ****             adcData = ((uint16) ((uint16) CAN_RX_DATA_BYTE1(CAN_RX_MAILBOX_ADCdata) << ONE_BYTE_OFF
+ 142:main.c        ****             CAN_RX_DATA_BYTE2(CAN_RX_MAILBOX_ADCdata);
+ 143:main.c        ****             
+ 144:main.c        ****             /* Send received received ADC data over UART */
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 4
+
+
+ 145:main.c        ****             sprintf(txData, "ADC out: %u.%.3u \r\n", (adcData / 1000u), (adcData % 1000u));
+ 146:main.c        ****             UART_UartPutString(txData);
+ 147:main.c        ****             receiveMailboxNumber = 0xFFu;
+ 148:main.c        ****         }
+ 149:main.c        ****     }
+ 150:main.c        **** }
+ 151:main.c        **** 
+ 152:main.c        **** 
+ 153:main.c        **** /*******************************************************************************
+ 154:main.c        **** * Function Name: ISR_CAN
+ 155:main.c        **** ********************************************************************************
+ 156:main.c        **** *
+ 157:main.c        **** * Summary:
+ 158:main.c        **** *  This ISR is executed at a Receive Message event and set receiveMailboxNumber
+ 159:main.c        **** *  global variable with receive message mailbox number.
+ 160:main.c        **** *
+ 161:main.c        **** * Parameters:
+ 162:main.c        **** *  None.
+ 163:main.c        **** *
+ 164:main.c        **** * Return:
+ 165:main.c        **** *  None.
+ 166:main.c        **** *
+ 167:main.c        **** *******************************************************************************/
+ 168:main.c        **** CY_ISR(ISR_CAN)
+ 169:main.c        **** {
+  28              		.loc 1 169 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+ 170:main.c        ****     /* Clear Receive Message flag */
+ 171:main.c        ****     CAN_INT_SR_REG = CAN_RX_MESSAGE_MASK;
+  33              		.loc 1 171 0
+  34 0000 8022     		movs	r2, #128
+  35 0002 5201     		lsls	r2, r2, #5
+  36 0004 0C4B     		ldr	r3, .L4
+  37 0006 1A60     		str	r2, [r3]
+ 172:main.c        **** 
+ 173:main.c        ****     /* Switch status message received */
+ 174:main.c        ****     if ((CAN_BUF_SR_REG & CAN_RX_MAILBOX_0_SHIFT) != 0u)
+  38              		.loc 1 174 0
+  39 0008 0C4B     		ldr	r3, .L4+4
+  40 000a 1B68     		ldr	r3, [r3]
+  41 000c DB07     		lsls	r3, r3, #31
+  42 000e 07D5     		bpl	.L2
+ 175:main.c        ****     {
+ 176:main.c        ****         receiveMailboxNumber = CAN_RX_MAILBOX_switchStatus;
+  43              		.loc 1 176 0
+  44 0010 0022     		movs	r2, #0
+  45 0012 0B4B     		ldr	r3, .L4+8
+  46 0014 1A70     		strb	r2, [r3]
+ 177:main.c        **** 
+ 178:main.c        ****         /* Acknowledges receipt of new message */
+ 179:main.c        ****         CAN_RX_ACK_MESSAGE(CAN_RX_MAILBOX_switchStatus);
+  47              		.loc 1 179 0
+  48 0016 0B4A     		ldr	r2, .L4+12
+  49 0018 1168     		ldr	r1, [r2]
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 5
+
+
+  50 001a 0123     		movs	r3, #1
+  51 001c 0B43     		orrs	r3, r1
+  52 001e 1360     		str	r3, [r2]
+  53              	.L2:
+ 180:main.c        ****     }
+ 181:main.c        **** 
+ 182:main.c        ****     if ((CAN_BUF_SR_REG & CAN_RX_MAILBOX_1_SHIFT) != 0u)
+  54              		.loc 1 182 0
+  55 0020 064B     		ldr	r3, .L4+4
+  56 0022 1B68     		ldr	r3, [r3]
+  57 0024 9B07     		lsls	r3, r3, #30
+  58 0026 06D5     		bpl	.L1
+ 183:main.c        ****     {
+ 184:main.c        ****         receiveMailboxNumber = CAN_RX_MAILBOX_ADCdata;
+  59              		.loc 1 184 0
+  60 0028 0123     		movs	r3, #1
+  61 002a 054A     		ldr	r2, .L4+8
+  62 002c 1370     		strb	r3, [r2]
+ 185:main.c        ****         
+ 186:main.c        ****         /* Acknowledges receipt of new message */
+ 187:main.c        ****         CAN_RX_ACK_MESSAGE(CAN_RX_MAILBOX_ADCdata);
+  63              		.loc 1 187 0
+  64 002e 064A     		ldr	r2, .L4+16
+  65 0030 1168     		ldr	r1, [r2]
+  66 0032 0B43     		orrs	r3, r1
+  67 0034 1360     		str	r3, [r2]
+  68              	.L1:
+ 188:main.c        ****     }
+ 189:main.c        **** }
+  69              		.loc 1 189 0
+  70              		@ sp needed
+  71 0036 7047     		bx	lr
+  72              	.L5:
+  73              		.align	2
+  74              	.L4:
+  75 0038 00002F40 		.word	1076822016
+  76 003c 08002F40 		.word	1076822024
+  77 0040 00000000 		.word	.LANCHOR0
+  78 0044 A0002F40 		.word	1076822176
+  79 0048 C0002F40 		.word	1076822208
+  80              		.cfi_endproc
+  81              	.LFE36:
+  82              		.size	ISR_CAN, .-ISR_CAN
+  83              		.global	__aeabi_uidivmod
+  84              		.global	__aeabi_uidiv
+  85              		.section	.text.main,"ax",%progbits
+  86              		.align	2
+  87              		.global	main
+  88              		.code	16
+  89              		.thumb_func
+  90              		.type	main, %function
+  91              	main:
+  92              	.LFB35:
+  90:main.c        ****     char8 txData[TX_DATA_SIZE];
+  93              		.loc 1 90 0
+  94              		.cfi_startproc
+  95              		@ args = 0, pretend = 0, frame = 32
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 6
+
+
+  96              		@ frame_needed = 0, uses_anonymous_args = 0
+  97 0000 30B5     		push	{r4, r5, lr}
+  98              		.cfi_def_cfa_offset 12
+  99              		.cfi_offset 4, -12
+ 100              		.cfi_offset 5, -8
+ 101              		.cfi_offset 14, -4
+ 102 0002 89B0     		sub	sp, sp, #36
+ 103              		.cfi_def_cfa_offset 48
+  95:main.c        ****     messagePWM.id  = PWM_MESSAGE_ID;
+ 104              		.loc 1 95 0
+ 105 0004 2F4B     		ldr	r3, .L12
+ 106 0006 0822     		movs	r2, #8
+ 107 0008 9A71     		strb	r2, [r3, #6]
+  96:main.c        ****     messagePWM.ide = PWM_MESSAGE_IDE;
+ 108              		.loc 1 96 0
+ 109 000a A332     		adds	r2, r2, #163
+ 110 000c FF32     		adds	r2, r2, #255
+ 111 000e 1A60     		str	r2, [r3]
+  97:main.c        ****     messagePWM.irq = PWM_MESSAGE_IRQ;
+ 112              		.loc 1 97 0
+ 113 0010 0022     		movs	r2, #0
+ 114 0012 5A71     		strb	r2, [r3, #5]
+  98:main.c        ****     messagePWM.msg = &dataPWM;
+ 115              		.loc 1 98 0
+ 116 0014 DA71     		strb	r2, [r3, #7]
+  99:main.c        ****     messagePWM.rtr = PWM_MESSAGE_RTR;
+ 117              		.loc 1 99 0
+ 118 0016 2C49     		ldr	r1, .L12+4
+ 119 0018 D960     		str	r1, [r3, #12]
+ 100:main.c        **** 
+ 120              		.loc 1 100 0
+ 121 001a 1A71     		strb	r2, [r3, #4]
+ 102:main.c        **** 
+ 122              		.loc 1 102 0
+ 123 001c FFF7FEFF 		bl	UART_Start
+ 124              	.LVL0:
+ 104:main.c        **** 
+ 125              		.loc 1 104 0
+ 126 0020 FFF7FEFF 		bl	CAN_Start
+ 127              	.LVL1:
+ 107:main.c        **** 
+ 128              		.loc 1 107 0
+ 129 0024 2949     		ldr	r1, .L12+8
+ 130 0026 1C20     		movs	r0, #28
+ 131 0028 FFF7FEFF 		bl	CyIntSetVector
+ 132              	.LVL2:
+ 109:main.c        **** 
+ 133              		.loc 1 109 0
+ 134              		.syntax divided
+ 135              	@ 109 "main.c" 1
+ 136 002c 62B6     		CPSIE   i
+ 137              	@ 0 "" 2
+ 138              		.thumb
+ 139              		.syntax unified
+ 140              	.L10:
+ 113:main.c        ****         {
+ 141              		.loc 1 113 0
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 7
+
+
+ 142 002e 284B     		ldr	r3, .L12+12
+ 143 0030 1B78     		ldrb	r3, [r3]
+ 144 0032 002B     		cmp	r3, #0
+ 145 0034 20D1     		bne	.L7
+ 115:main.c        ****             {
+ 146              		.loc 1 115 0
+ 147 0036 274B     		ldr	r3, .L12+16
+ 148 0038 1B68     		ldr	r3, [r3]
+ 149 003a 1B0E     		lsrs	r3, r3, #24
+ 150 003c 012B     		cmp	r3, #1
+ 151 003e 15D1     		bne	.L8
+ 118:main.c        ****                 
+ 152              		.loc 1 118 0
+ 153 0040 2548     		ldr	r0, .L12+20
+ 154 0042 FFF7FEFF 		bl	UART_UartPutString
+ 155              	.LVL3:
+ 121:main.c        ****                 
+ 156              		.loc 1 121 0
+ 157 0046 254C     		ldr	r4, .L12+24
+ 158 0048 2378     		ldrb	r3, [r4]
+ 159 004a 0A33     		adds	r3, r3, #10
+ 160 004c DBB2     		uxtb	r3, r3
+ 161 004e 2370     		strb	r3, [r4]
+ 124:main.c        ****                 CAN_SendMsg(&messagePWM);
+ 162              		.loc 1 124 0
+ 163 0050 1D4A     		ldr	r2, .L12+4
+ 164 0052 1370     		strb	r3, [r2]
+ 125:main.c        ****                 
+ 165              		.loc 1 125 0
+ 166 0054 1B48     		ldr	r0, .L12
+ 167 0056 FFF7FEFF 		bl	CAN_SendMsg
+ 168              	.LVL4:
+ 128:main.c        ****                 UART_UartPutString(txData);
+ 169              		.loc 1 128 0
+ 170 005a 2278     		ldrb	r2, [r4]
+ 171 005c 2049     		ldr	r1, .L12+28
+ 172 005e 01A8     		add	r0, sp, #4
+ 173 0060 FFF7FEFF 		bl	sprintf
+ 174              	.LVL5:
+ 129:main.c        ****             }
+ 175              		.loc 1 129 0
+ 176 0064 01A8     		add	r0, sp, #4
+ 177 0066 FFF7FEFF 		bl	UART_UartPutString
+ 178              	.LVL6:
+ 179 006a 02E0     		b	.L9
+ 180              	.L8:
+ 134:main.c        ****             }
+ 181              		.loc 1 134 0
+ 182 006c 1D48     		ldr	r0, .L12+32
+ 183 006e FFF7FEFF 		bl	UART_UartPutString
+ 184              	.LVL7:
+ 185              	.L9:
+ 136:main.c        ****         }
+ 186              		.loc 1 136 0
+ 187 0072 FF22     		movs	r2, #255
+ 188 0074 164B     		ldr	r3, .L12+12
+ 189 0076 1A70     		strb	r2, [r3]
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 8
+
+
+ 190              	.L7:
+ 139:main.c        ****         {
+ 191              		.loc 1 139 0
+ 192 0078 154B     		ldr	r3, .L12+12
+ 193 007a 1B78     		ldrb	r3, [r3]
+ 194 007c 012B     		cmp	r3, #1
+ 195 007e D6D1     		bne	.L10
+ 141:main.c        ****             CAN_RX_DATA_BYTE2(CAN_RX_MAILBOX_ADCdata);
+ 196              		.loc 1 141 0
+ 197 0080 194A     		ldr	r2, .L12+36
+ 198 0082 1468     		ldr	r4, [r2]
+ 199 0084 240E     		lsrs	r4, r4, #24
+ 200 0086 2302     		lsls	r3, r4, #8
+ 142:main.c        ****             
+ 201              		.loc 1 142 0
+ 202 0088 1468     		ldr	r4, [r2]
+ 203 008a 240C     		lsrs	r4, r4, #16
+ 141:main.c        ****             CAN_RX_DATA_BYTE2(CAN_RX_MAILBOX_ADCdata);
+ 204              		.loc 1 141 0
+ 205 008c FF22     		movs	r2, #255
+ 206 008e 1440     		ands	r4, r2
+ 207 0090 1C43     		orrs	r4, r3
+ 208              	.LVL8:
+ 145:main.c        ****             UART_UartPutString(txData);
+ 209              		.loc 1 145 0
+ 210 0092 FA21     		movs	r1, #250
+ 211 0094 8900     		lsls	r1, r1, #2
+ 212 0096 2000     		movs	r0, r4
+ 213 0098 FFF7FEFF 		bl	__aeabi_uidivmod
+ 214              	.LVL9:
+ 215 009c 8DB2     		uxth	r5, r1
+ 216 009e FA21     		movs	r1, #250
+ 217 00a0 8900     		lsls	r1, r1, #2
+ 218 00a2 2000     		movs	r0, r4
+ 219 00a4 FFF7FEFF 		bl	__aeabi_uidiv
+ 220              	.LVL10:
+ 221 00a8 82B2     		uxth	r2, r0
+ 222 00aa 2B00     		movs	r3, r5
+ 223 00ac 0F49     		ldr	r1, .L12+40
+ 224 00ae 01A8     		add	r0, sp, #4
+ 225 00b0 FFF7FEFF 		bl	sprintf
+ 226              	.LVL11:
+ 146:main.c        ****             receiveMailboxNumber = 0xFFu;
+ 227              		.loc 1 146 0
+ 228 00b4 01A8     		add	r0, sp, #4
+ 229 00b6 FFF7FEFF 		bl	UART_UartPutString
+ 230              	.LVL12:
+ 147:main.c        ****         }
+ 231              		.loc 1 147 0
+ 232 00ba 054B     		ldr	r3, .L12+12
+ 233 00bc FF22     		movs	r2, #255
+ 234 00be 1A70     		strb	r2, [r3]
+ 235 00c0 B5E7     		b	.L10
+ 236              	.L13:
+ 237 00c2 C046     		.align	2
+ 238              	.L12:
+ 239 00c4 00000000 		.word	messagePWM
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 9
+
+
+ 240 00c8 00000000 		.word	dataPWM
+ 241 00cc 00000000 		.word	ISR_CAN
+ 242 00d0 00000000 		.word	.LANCHOR0
+ 243 00d4 A8002F40 		.word	1076822184
+ 244 00d8 00000000 		.word	.LC5
+ 245 00dc 00000000 		.word	.LANCHOR1
+ 246 00e0 14000000 		.word	.LC8
+ 247 00e4 2C000000 		.word	.LC10
+ 248 00e8 C8002F40 		.word	1076822216
+ 249 00ec 44000000 		.word	.LC12
+ 250              		.cfi_endproc
+ 251              	.LFE35:
+ 252              		.size	main, .-main
+ 253              		.global	receiveMailboxNumber
+ 254              		.global	pulseWidthValue
+ 255              		.comm	messagePWM,16,4
+ 256              		.comm	dataPWM,8,4
+ 257              		.data
+ 258              		.set	.LANCHOR0,. + 0
+ 259              		.type	receiveMailboxNumber, %object
+ 260              		.size	receiveMailboxNumber, 1
+ 261              	receiveMailboxNumber:
+ 262 0000 FF       		.byte	-1
+ 263              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 264              		.align	2
+ 265              	.LC5:
+ 266 0000 53776974 		.ascii	"Switch 1 pressed.\015\012\000"
+ 266      63682031 
+ 266      20707265 
+ 266      73736564 
+ 266      2E0D0A00 
+ 267              	.LC8:
+ 268 0014 50574D20 		.ascii	"PWM pulse width: %X \015\012\000"
+ 268      70756C73 
+ 268      65207769 
+ 268      6474683A 
+ 268      20255820 
+ 269 002b 00       		.space	1
+ 270              	.LC10:
+ 271 002c 53776974 		.ascii	"Switch 1 released.\015\012\000"
+ 271      63682031 
+ 271      2072656C 
+ 271      65617365 
+ 271      642E0D0A 
+ 272 0041 000000   		.space	3
+ 273              	.LC12:
+ 274 0044 41444320 		.ascii	"ADC out: %u.%.3u \015\012\000"
+ 274      6F75743A 
+ 274      2025752E 
+ 274      252E3375 
+ 274      200D0A00 
+ 275              		.bss
+ 276              		.set	.LANCHOR1,. + 0
+ 277              		.type	pulseWidthValue, %object
+ 278              		.size	pulseWidthValue, 1
+ 279              	pulseWidthValue:
+ 280 0000 00       		.space	1
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 10
+
+
+ 281              		.text
+ 282              	.Letext0:
+ 283              		.file 2 "Generated_Source\\PSoC4/cytypes.h"
+ 284              		.file 3 "Generated_Source\\PSoC4/CAN.h"
+ 285              		.file 4 "Generated_Source\\PSoC4/UART.h"
+ 286              		.file 5 "Generated_Source\\PSoC4/CyLib.h"
+ 287              		.file 6 "Generated_Source\\PSoC4/UART_SPI_UART.h"
+ 288              		.file 7 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 289              		.section	.debug_info,"",%progbits
+ 290              	.Ldebug_info0:
+ 291 0000 01040000 		.4byte	0x401
+ 292 0004 0400     		.2byte	0x4
+ 293 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 294 000a 04       		.byte	0x4
+ 295 000b 01       		.uleb128 0x1
+ 296 000c FE010000 		.4byte	.LASF45
+ 297 0010 0C       		.byte	0xc
+ 298 0011 AA020000 		.4byte	.LASF46
+ 299 0015 27000000 		.4byte	.LASF47
+ 300 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 301 001d 00000000 		.4byte	0
+ 302 0021 00000000 		.4byte	.Ldebug_line0
+ 303 0025 02       		.uleb128 0x2
+ 304 0026 01       		.byte	0x1
+ 305 0027 06       		.byte	0x6
+ 306 0028 D6020000 		.4byte	.LASF0
+ 307 002c 02       		.uleb128 0x2
+ 308 002d 01       		.byte	0x1
+ 309 002e 08       		.byte	0x8
+ 310 002f 20010000 		.4byte	.LASF1
+ 311 0033 02       		.uleb128 0x2
+ 312 0034 02       		.byte	0x2
+ 313 0035 05       		.byte	0x5
+ 314 0036 9D010000 		.4byte	.LASF2
+ 315 003a 02       		.uleb128 0x2
+ 316 003b 02       		.byte	0x2
+ 317 003c 07       		.byte	0x7
+ 318 003d 55010000 		.4byte	.LASF3
+ 319 0041 02       		.uleb128 0x2
+ 320 0042 04       		.byte	0x4
+ 321 0043 05       		.byte	0x5
+ 322 0044 A7000000 		.4byte	.LASF4
+ 323 0048 02       		.uleb128 0x2
+ 324 0049 04       		.byte	0x4
+ 325 004a 07       		.byte	0x7
+ 326 004b 43010000 		.4byte	.LASF5
+ 327 004f 02       		.uleb128 0x2
+ 328 0050 08       		.byte	0x8
+ 329 0051 05       		.byte	0x5
+ 330 0052 9C020000 		.4byte	.LASF6
+ 331 0056 02       		.uleb128 0x2
+ 332 0057 08       		.byte	0x8
+ 333 0058 07       		.byte	0x7
+ 334 0059 D1010000 		.4byte	.LASF7
+ 335 005d 03       		.uleb128 0x3
+ 336 005e 04       		.byte	0x4
+ 337 005f 05       		.byte	0x5
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 11
+
+
+ 338 0060 696E7400 		.ascii	"int\000"
+ 339 0064 02       		.uleb128 0x2
+ 340 0065 04       		.byte	0x4
+ 341 0066 07       		.byte	0x7
+ 342 0067 D0000000 		.4byte	.LASF8
+ 343 006b 04       		.uleb128 0x4
+ 344 006c C4020000 		.4byte	.LASF9
+ 345 0070 02       		.byte	0x2
+ 346 0071 D201     		.2byte	0x1d2
+ 347 0073 2C000000 		.4byte	0x2c
+ 348 0077 04       		.uleb128 0x4
+ 349 0078 A7010000 		.4byte	.LASF10
+ 350 007c 02       		.byte	0x2
+ 351 007d D301     		.2byte	0x1d3
+ 352 007f 3A000000 		.4byte	0x3a
+ 353 0083 04       		.uleb128 0x4
+ 354 0084 AE010000 		.4byte	.LASF11
+ 355 0088 02       		.byte	0x2
+ 356 0089 D401     		.2byte	0x1d4
+ 357 008b 48000000 		.4byte	0x48
+ 358 008f 02       		.uleb128 0x2
+ 359 0090 04       		.byte	0x4
+ 360 0091 04       		.byte	0x4
+ 361 0092 03010000 		.4byte	.LASF12
+ 362 0096 02       		.uleb128 0x2
+ 363 0097 08       		.byte	0x8
+ 364 0098 04       		.byte	0x4
+ 365 0099 86010000 		.4byte	.LASF13
+ 366 009d 04       		.uleb128 0x4
+ 367 009e 1B000000 		.4byte	.LASF14
+ 368 00a2 02       		.byte	0x2
+ 369 00a3 E301     		.2byte	0x1e3
+ 370 00a5 A9000000 		.4byte	0xa9
+ 371 00a9 02       		.uleb128 0x2
+ 372 00aa 01       		.byte	0x1
+ 373 00ab 08       		.byte	0x8
+ 374 00ac B1020000 		.4byte	.LASF15
+ 375 00b0 04       		.uleb128 0x4
+ 376 00b1 33010000 		.4byte	.LASF16
+ 377 00b5 02       		.byte	0x2
+ 378 00b6 7C02     		.2byte	0x27c
+ 379 00b8 BC000000 		.4byte	0xbc
+ 380 00bc 05       		.uleb128 0x5
+ 381 00bd 6B000000 		.4byte	0x6b
+ 382 00c1 04       		.uleb128 0x4
+ 383 00c2 00000000 		.4byte	.LASF17
+ 384 00c6 02       		.byte	0x2
+ 385 00c7 7E02     		.2byte	0x27e
+ 386 00c9 CD000000 		.4byte	0xcd
+ 387 00cd 05       		.uleb128 0x5
+ 388 00ce 83000000 		.4byte	0x83
+ 389 00d2 02       		.uleb128 0x2
+ 390 00d3 08       		.byte	0x8
+ 391 00d4 04       		.byte	0x4
+ 392 00d5 CA020000 		.4byte	.LASF18
+ 393 00d9 02       		.uleb128 0x2
+ 394 00da 04       		.byte	0x4
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 12
+
+
+ 395 00db 07       		.byte	0x7
+ 396 00dc 8C020000 		.4byte	.LASF19
+ 397 00e0 06       		.uleb128 0x6
+ 398 00e1 08       		.byte	0x8
+ 399 00e2 03       		.byte	0x3
+ 400 00e3 6F       		.byte	0x6f
+ 401 00e4 F5000000 		.4byte	0xf5
+ 402 00e8 07       		.uleb128 0x7
+ 403 00e9 DD000000 		.4byte	.LASF21
+ 404 00ed 03       		.byte	0x3
+ 405 00ee 71       		.byte	0x71
+ 406 00ef F5000000 		.4byte	0xf5
+ 407 00f3 00       		.byte	0
+ 408 00f4 00       		.byte	0
+ 409 00f5 08       		.uleb128 0x8
+ 410 00f6 6B000000 		.4byte	0x6b
+ 411 00fa 05010000 		.4byte	0x105
+ 412 00fe 09       		.uleb128 0x9
+ 413 00ff D9000000 		.4byte	0xd9
+ 414 0103 07       		.byte	0x7
+ 415 0104 00       		.byte	0
+ 416 0105 0A       		.uleb128 0xa
+ 417 0106 73010000 		.4byte	.LASF20
+ 418 010a 03       		.byte	0x3
+ 419 010b 72       		.byte	0x72
+ 420 010c E0000000 		.4byte	0xe0
+ 421 0110 06       		.uleb128 0x6
+ 422 0111 08       		.byte	0x8
+ 423 0112 03       		.byte	0x3
+ 424 0113 75       		.byte	0x75
+ 425 0114 25010000 		.4byte	0x125
+ 426 0118 07       		.uleb128 0x7
+ 427 0119 DD000000 		.4byte	.LASF21
+ 428 011d 03       		.byte	0x3
+ 429 011e 77       		.byte	0x77
+ 430 011f 35010000 		.4byte	0x135
+ 431 0123 00       		.byte	0
+ 432 0124 00       		.byte	0
+ 433 0125 08       		.uleb128 0x8
+ 434 0126 B0000000 		.4byte	0xb0
+ 435 012a 35010000 		.4byte	0x135
+ 436 012e 09       		.uleb128 0x9
+ 437 012f D9000000 		.4byte	0xd9
+ 438 0133 07       		.byte	0x7
+ 439 0134 00       		.byte	0
+ 440 0135 05       		.uleb128 0x5
+ 441 0136 25010000 		.4byte	0x125
+ 442 013a 0A       		.uleb128 0xa
+ 443 013b 06000000 		.4byte	.LASF22
+ 444 013f 03       		.byte	0x3
+ 445 0140 78       		.byte	0x78
+ 446 0141 10010000 		.4byte	0x110
+ 447 0145 06       		.uleb128 0x6
+ 448 0146 04       		.byte	0x4
+ 449 0147 03       		.byte	0x3
+ 450 0148 7B       		.byte	0x7b
+ 451 0149 5A010000 		.4byte	0x15a
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 13
+
+
+ 452 014d 07       		.uleb128 0x7
+ 453 014e DD000000 		.4byte	.LASF21
+ 454 0152 03       		.byte	0x3
+ 455 0153 7D       		.byte	0x7d
+ 456 0154 6A010000 		.4byte	0x16a
+ 457 0158 00       		.byte	0
+ 458 0159 00       		.byte	0
+ 459 015a 08       		.uleb128 0x8
+ 460 015b B0000000 		.4byte	0xb0
+ 461 015f 6A010000 		.4byte	0x16a
+ 462 0163 09       		.uleb128 0x9
+ 463 0164 D9000000 		.4byte	0xd9
+ 464 0168 03       		.byte	0x3
+ 465 0169 00       		.byte	0
+ 466 016a 05       		.uleb128 0x5
+ 467 016b 5A010000 		.4byte	0x15a
+ 468 016f 0A       		.uleb128 0xa
+ 469 0170 B0000000 		.4byte	.LASF23
+ 470 0174 03       		.byte	0x3
+ 471 0175 7E       		.byte	0x7e
+ 472 0176 45010000 		.4byte	0x145
+ 473 017a 06       		.uleb128 0x6
+ 474 017b 10       		.byte	0x10
+ 475 017c 03       		.byte	0x3
+ 476 017d 81       		.byte	0x81
+ 477 017e D6010000 		.4byte	0x1d6
+ 478 0182 0B       		.uleb128 0xb
+ 479 0183 696400   		.ascii	"id\000"
+ 480 0186 03       		.byte	0x3
+ 481 0187 83       		.byte	0x83
+ 482 0188 83000000 		.4byte	0x83
+ 483 018c 00       		.byte	0
+ 484 018d 0B       		.uleb128 0xb
+ 485 018e 72747200 		.ascii	"rtr\000"
+ 486 0192 03       		.byte	0x3
+ 487 0193 84       		.byte	0x84
+ 488 0194 6B000000 		.4byte	0x6b
+ 489 0198 04       		.byte	0x4
+ 490 0199 0B       		.uleb128 0xb
+ 491 019a 69646500 		.ascii	"ide\000"
+ 492 019e 03       		.byte	0x3
+ 493 019f 85       		.byte	0x85
+ 494 01a0 6B000000 		.4byte	0x6b
+ 495 01a4 05       		.byte	0x5
+ 496 01a5 0B       		.uleb128 0xb
+ 497 01a6 646C6300 		.ascii	"dlc\000"
+ 498 01aa 03       		.byte	0x3
+ 499 01ab 86       		.byte	0x86
+ 500 01ac 6B000000 		.4byte	0x6b
+ 501 01b0 06       		.byte	0x6
+ 502 01b1 0B       		.uleb128 0xb
+ 503 01b2 69727100 		.ascii	"irq\000"
+ 504 01b6 03       		.byte	0x3
+ 505 01b7 87       		.byte	0x87
+ 506 01b8 6B000000 		.4byte	0x6b
+ 507 01bc 07       		.byte	0x7
+ 508 01bd 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 14
+
+
+ 509 01be 73737400 		.ascii	"sst\000"
+ 510 01c2 03       		.byte	0x3
+ 511 01c3 89       		.byte	0x89
+ 512 01c4 6B000000 		.4byte	0x6b
+ 513 01c8 08       		.byte	0x8
+ 514 01c9 0B       		.uleb128 0xb
+ 515 01ca 6D736700 		.ascii	"msg\000"
+ 516 01ce 03       		.byte	0x3
+ 517 01cf 8B       		.byte	0x8b
+ 518 01d0 D6010000 		.4byte	0x1d6
+ 519 01d4 0C       		.byte	0xc
+ 520 01d5 00       		.byte	0
+ 521 01d6 0C       		.uleb128 0xc
+ 522 01d7 04       		.byte	0x4
+ 523 01d8 05010000 		.4byte	0x105
+ 524 01dc 0A       		.uleb128 0xa
+ 525 01dd 09010000 		.4byte	.LASF24
+ 526 01e1 03       		.byte	0x3
+ 527 01e2 8C       		.byte	0x8c
+ 528 01e3 7A010000 		.4byte	0x17a
+ 529 01e7 06       		.uleb128 0x6
+ 530 01e8 20       		.byte	0x20
+ 531 01e9 03       		.byte	0x3
+ 532 01ea A0       		.byte	0xa0
+ 533 01eb 44020000 		.4byte	0x244
+ 534 01ef 07       		.uleb128 0x7
+ 535 01f0 15000000 		.4byte	.LASF25
+ 536 01f4 03       		.byte	0x3
+ 537 01f5 A2       		.byte	0xa2
+ 538 01f6 6F010000 		.4byte	0x16f
+ 539 01fa 00       		.byte	0
+ 540 01fb 07       		.uleb128 0x7
+ 541 01fc 2E010000 		.4byte	.LASF26
+ 542 0200 03       		.byte	0x3
+ 543 0201 A3       		.byte	0xa3
+ 544 0202 6F010000 		.4byte	0x16f
+ 545 0206 04       		.byte	0x4
+ 546 0207 07       		.uleb128 0x7
+ 547 0208 E2000000 		.4byte	.LASF27
+ 548 020c 03       		.byte	0x3
+ 549 020d A4       		.byte	0xa4
+ 550 020e 3A010000 		.4byte	0x13a
+ 551 0212 08       		.byte	0x8
+ 552 0213 07       		.uleb128 0x7
+ 553 0214 21000000 		.4byte	.LASF28
+ 554 0218 03       		.byte	0x3
+ 555 0219 A5       		.byte	0xa5
+ 556 021a 6F010000 		.4byte	0x16f
+ 557 021e 10       		.byte	0x10
+ 558 021f 07       		.uleb128 0x7
+ 559 0220 BE020000 		.4byte	.LASF29
+ 560 0224 03       		.byte	0x3
+ 561 0225 A6       		.byte	0xa6
+ 562 0226 6F010000 		.4byte	0x16f
+ 563 022a 14       		.byte	0x14
+ 564 022b 07       		.uleb128 0x7
+ 565 022c 95020000 		.4byte	.LASF30
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 15
+
+
+ 566 0230 03       		.byte	0x3
+ 567 0231 A7       		.byte	0xa7
+ 568 0232 6F010000 		.4byte	0x16f
+ 569 0236 18       		.byte	0x18
+ 570 0237 07       		.uleb128 0x7
+ 571 0238 E9000000 		.4byte	.LASF31
+ 572 023c 03       		.byte	0x3
+ 573 023d A8       		.byte	0xa8
+ 574 023e 6F010000 		.4byte	0x16f
+ 575 0242 1C       		.byte	0x1c
+ 576 0243 00       		.byte	0
+ 577 0244 0A       		.uleb128 0xa
+ 578 0245 F0010000 		.4byte	.LASF32
+ 579 0249 03       		.byte	0x3
+ 580 024a A9       		.byte	0xa9
+ 581 024b E7010000 		.4byte	0x1e7
+ 582 024f 0D       		.uleb128 0xd
+ 583 0250 E8010000 		.4byte	.LASF48
+ 584 0254 01       		.byte	0x1
+ 585 0255 A8       		.byte	0xa8
+ 586 0256 00000000 		.4byte	.LFB36
+ 587 025a 4C000000 		.4byte	.LFE36-.LFB36
+ 588 025e 01       		.uleb128 0x1
+ 589 025f 9C       		.byte	0x9c
+ 590 0260 0E       		.uleb128 0xe
+ 591 0261 B5010000 		.4byte	.LASF49
+ 592 0265 01       		.byte	0x1
+ 593 0266 59       		.byte	0x59
+ 594 0267 5D000000 		.4byte	0x5d
+ 595 026b 00000000 		.4byte	.LFB35
+ 596 026f F0000000 		.4byte	.LFE35-.LFB35
+ 597 0273 01       		.uleb128 0x1
+ 598 0274 9C       		.byte	0x9c
+ 599 0275 6C030000 		.4byte	0x36c
+ 600 0279 0F       		.uleb128 0xf
+ 601 027a A0000000 		.4byte	.LASF33
+ 602 027e 01       		.byte	0x1
+ 603 027f 5B       		.byte	0x5b
+ 604 0280 6C030000 		.4byte	0x36c
+ 605 0284 02       		.uleb128 0x2
+ 606 0285 91       		.byte	0x91
+ 607 0286 54       		.sleb128 -44
+ 608 0287 0F       		.uleb128 0xf
+ 609 0288 C9010000 		.4byte	.LASF34
+ 610 028c 01       		.byte	0x1
+ 611 028d 5C       		.byte	0x5c
+ 612 028e 77000000 		.4byte	0x77
+ 613 0292 01       		.uleb128 0x1
+ 614 0293 54       		.byte	0x54
+ 615 0294 10       		.uleb128 0x10
+ 616 0295 20000000 		.4byte	.LVL0
+ 617 0299 C0030000 		.4byte	0x3c0
+ 618 029d 10       		.uleb128 0x10
+ 619 029e 24000000 		.4byte	.LVL1
+ 620 02a2 CB030000 		.4byte	0x3cb
+ 621 02a6 11       		.uleb128 0x11
+ 622 02a7 2C000000 		.4byte	.LVL2
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 16
+
+
+ 623 02ab D6030000 		.4byte	0x3d6
+ 624 02af C2020000 		.4byte	0x2c2
+ 625 02b3 12       		.uleb128 0x12
+ 626 02b4 01       		.uleb128 0x1
+ 627 02b5 50       		.byte	0x50
+ 628 02b6 01       		.uleb128 0x1
+ 629 02b7 4C       		.byte	0x4c
+ 630 02b8 12       		.uleb128 0x12
+ 631 02b9 01       		.uleb128 0x1
+ 632 02ba 51       		.byte	0x51
+ 633 02bb 05       		.uleb128 0x5
+ 634 02bc 03       		.byte	0x3
+ 635 02bd 00000000 		.4byte	ISR_CAN
+ 636 02c1 00       		.byte	0
+ 637 02c2 11       		.uleb128 0x11
+ 638 02c3 46000000 		.4byte	.LVL3
+ 639 02c7 E1030000 		.4byte	0x3e1
+ 640 02cb D9020000 		.4byte	0x2d9
+ 641 02cf 12       		.uleb128 0x12
+ 642 02d0 01       		.uleb128 0x1
+ 643 02d1 50       		.byte	0x50
+ 644 02d2 05       		.uleb128 0x5
+ 645 02d3 03       		.byte	0x3
+ 646 02d4 00000000 		.4byte	.LC5
+ 647 02d8 00       		.byte	0
+ 648 02d9 11       		.uleb128 0x11
+ 649 02da 5A000000 		.4byte	.LVL4
+ 650 02de ED030000 		.4byte	0x3ed
+ 651 02e2 F0020000 		.4byte	0x2f0
+ 652 02e6 12       		.uleb128 0x12
+ 653 02e7 01       		.uleb128 0x1
+ 654 02e8 50       		.byte	0x50
+ 655 02e9 05       		.uleb128 0x5
+ 656 02ea 03       		.byte	0x3
+ 657 02eb 00000000 		.4byte	messagePWM
+ 658 02ef 00       		.byte	0
+ 659 02f0 11       		.uleb128 0x11
+ 660 02f1 64000000 		.4byte	.LVL5
+ 661 02f5 F9030000 		.4byte	0x3f9
+ 662 02f9 0D030000 		.4byte	0x30d
+ 663 02fd 12       		.uleb128 0x12
+ 664 02fe 01       		.uleb128 0x1
+ 665 02ff 50       		.byte	0x50
+ 666 0300 02       		.uleb128 0x2
+ 667 0301 91       		.byte	0x91
+ 668 0302 54       		.sleb128 -44
+ 669 0303 12       		.uleb128 0x12
+ 670 0304 01       		.uleb128 0x1
+ 671 0305 51       		.byte	0x51
+ 672 0306 05       		.uleb128 0x5
+ 673 0307 03       		.byte	0x3
+ 674 0308 14000000 		.4byte	.LC8
+ 675 030c 00       		.byte	0
+ 676 030d 11       		.uleb128 0x11
+ 677 030e 6A000000 		.4byte	.LVL6
+ 678 0312 E1030000 		.4byte	0x3e1
+ 679 0316 21030000 		.4byte	0x321
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 17
+
+
+ 680 031a 12       		.uleb128 0x12
+ 681 031b 01       		.uleb128 0x1
+ 682 031c 50       		.byte	0x50
+ 683 031d 02       		.uleb128 0x2
+ 684 031e 91       		.byte	0x91
+ 685 031f 54       		.sleb128 -44
+ 686 0320 00       		.byte	0
+ 687 0321 11       		.uleb128 0x11
+ 688 0322 72000000 		.4byte	.LVL7
+ 689 0326 E1030000 		.4byte	0x3e1
+ 690 032a 38030000 		.4byte	0x338
+ 691 032e 12       		.uleb128 0x12
+ 692 032f 01       		.uleb128 0x1
+ 693 0330 50       		.byte	0x50
+ 694 0331 05       		.uleb128 0x5
+ 695 0332 03       		.byte	0x3
+ 696 0333 2C000000 		.4byte	.LC10
+ 697 0337 00       		.byte	0
+ 698 0338 11       		.uleb128 0x11
+ 699 0339 B4000000 		.4byte	.LVL11
+ 700 033d F9030000 		.4byte	0x3f9
+ 701 0341 5B030000 		.4byte	0x35b
+ 702 0345 12       		.uleb128 0x12
+ 703 0346 01       		.uleb128 0x1
+ 704 0347 50       		.byte	0x50
+ 705 0348 02       		.uleb128 0x2
+ 706 0349 91       		.byte	0x91
+ 707 034a 54       		.sleb128 -44
+ 708 034b 12       		.uleb128 0x12
+ 709 034c 01       		.uleb128 0x1
+ 710 034d 51       		.byte	0x51
+ 711 034e 05       		.uleb128 0x5
+ 712 034f 03       		.byte	0x3
+ 713 0350 44000000 		.4byte	.LC12
+ 714 0354 12       		.uleb128 0x12
+ 715 0355 01       		.uleb128 0x1
+ 716 0356 53       		.byte	0x53
+ 717 0357 02       		.uleb128 0x2
+ 718 0358 75       		.byte	0x75
+ 719 0359 00       		.sleb128 0
+ 720 035a 00       		.byte	0
+ 721 035b 13       		.uleb128 0x13
+ 722 035c BA000000 		.4byte	.LVL12
+ 723 0360 E1030000 		.4byte	0x3e1
+ 724 0364 12       		.uleb128 0x12
+ 725 0365 01       		.uleb128 0x1
+ 726 0366 50       		.byte	0x50
+ 727 0367 02       		.uleb128 0x2
+ 728 0368 91       		.byte	0x91
+ 729 0369 54       		.sleb128 -44
+ 730 036a 00       		.byte	0
+ 731 036b 00       		.byte	0
+ 732 036c 08       		.uleb128 0x8
+ 733 036d 9D000000 		.4byte	0x9d
+ 734 0371 7C030000 		.4byte	0x37c
+ 735 0375 09       		.uleb128 0x9
+ 736 0376 D9000000 		.4byte	0xd9
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 18
+
+
+ 737 037a 18       		.byte	0x18
+ 738 037b 00       		.byte	0
+ 739 037c 14       		.uleb128 0x14
+ 740 037d B6020000 		.4byte	.LASF35
+ 741 0381 01       		.byte	0x1
+ 742 0382 3C       		.byte	0x3c
+ 743 0383 05010000 		.4byte	0x105
+ 744 0387 05       		.uleb128 0x5
+ 745 0388 03       		.byte	0x3
+ 746 0389 00000000 		.4byte	dataPWM
+ 747 038d 14       		.uleb128 0x14
+ 748 038e 38010000 		.4byte	.LASF36
+ 749 0392 01       		.byte	0x1
+ 750 0393 3D       		.byte	0x3d
+ 751 0394 DC010000 		.4byte	0x1dc
+ 752 0398 05       		.uleb128 0x5
+ 753 0399 03       		.byte	0x3
+ 754 039a 00000000 		.4byte	messagePWM
+ 755 039e 14       		.uleb128 0x14
+ 756 039f 8D010000 		.4byte	.LASF37
+ 757 03a3 01       		.byte	0x1
+ 758 03a4 40       		.byte	0x40
+ 759 03a5 6B000000 		.4byte	0x6b
+ 760 03a9 05       		.uleb128 0x5
+ 761 03aa 03       		.byte	0x3
+ 762 03ab 00000000 		.4byte	pulseWidthValue
+ 763 03af 14       		.uleb128 0x14
+ 764 03b0 BB000000 		.4byte	.LASF38
+ 765 03b4 01       		.byte	0x1
+ 766 03b5 43       		.byte	0x43
+ 767 03b6 BC000000 		.4byte	0xbc
+ 768 03ba 05       		.uleb128 0x5
+ 769 03bb 03       		.byte	0x3
+ 770 03bc 00000000 		.4byte	receiveMailboxNumber
+ 771 03c0 15       		.uleb128 0x15
+ 772 03c1 68010000 		.4byte	.LASF39
+ 773 03c5 68010000 		.4byte	.LASF39
+ 774 03c9 04       		.byte	0x4
+ 775 03ca 6E       		.byte	0x6e
+ 776 03cb 15       		.uleb128 0x15
+ 777 03cc EA020000 		.4byte	.LASF40
+ 778 03d0 EA020000 		.4byte	.LASF40
+ 779 03d4 03       		.byte	0x3
+ 780 03d5 C5       		.byte	0xc5
+ 781 03d6 15       		.uleb128 0x15
+ 782 03d7 BA010000 		.4byte	.LASF41
+ 783 03db BA010000 		.4byte	.LASF41
+ 784 03df 05       		.byte	0x5
+ 785 03e0 BD       		.byte	0xbd
+ 786 03e1 16       		.uleb128 0x16
+ 787 03e2 F0000000 		.4byte	.LASF42
+ 788 03e6 F0000000 		.4byte	.LASF42
+ 789 03ea 06       		.byte	0x6
+ 790 03eb 2103     		.2byte	0x321
+ 791 03ed 16       		.uleb128 0x16
+ 792 03ee 14010000 		.4byte	.LASF43
+ 793 03f2 14010000 		.4byte	.LASF43
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 19
+
+
+ 794 03f6 03       		.byte	0x3
+ 795 03f7 1801     		.2byte	0x118
+ 796 03f9 15       		.uleb128 0x15
+ 797 03fa E2020000 		.4byte	.LASF44
+ 798 03fe E2020000 		.4byte	.LASF44
+ 799 0402 07       		.byte	0x7
+ 800 0403 E7       		.byte	0xe7
+ 801 0404 00       		.byte	0
+ 802              		.section	.debug_abbrev,"",%progbits
+ 803              	.Ldebug_abbrev0:
+ 804 0000 01       		.uleb128 0x1
+ 805 0001 11       		.uleb128 0x11
+ 806 0002 01       		.byte	0x1
+ 807 0003 25       		.uleb128 0x25
+ 808 0004 0E       		.uleb128 0xe
+ 809 0005 13       		.uleb128 0x13
+ 810 0006 0B       		.uleb128 0xb
+ 811 0007 03       		.uleb128 0x3
+ 812 0008 0E       		.uleb128 0xe
+ 813 0009 1B       		.uleb128 0x1b
+ 814 000a 0E       		.uleb128 0xe
+ 815 000b 55       		.uleb128 0x55
+ 816 000c 17       		.uleb128 0x17
+ 817 000d 11       		.uleb128 0x11
+ 818 000e 01       		.uleb128 0x1
+ 819 000f 10       		.uleb128 0x10
+ 820 0010 17       		.uleb128 0x17
+ 821 0011 00       		.byte	0
+ 822 0012 00       		.byte	0
+ 823 0013 02       		.uleb128 0x2
+ 824 0014 24       		.uleb128 0x24
+ 825 0015 00       		.byte	0
+ 826 0016 0B       		.uleb128 0xb
+ 827 0017 0B       		.uleb128 0xb
+ 828 0018 3E       		.uleb128 0x3e
+ 829 0019 0B       		.uleb128 0xb
+ 830 001a 03       		.uleb128 0x3
+ 831 001b 0E       		.uleb128 0xe
+ 832 001c 00       		.byte	0
+ 833 001d 00       		.byte	0
+ 834 001e 03       		.uleb128 0x3
+ 835 001f 24       		.uleb128 0x24
+ 836 0020 00       		.byte	0
+ 837 0021 0B       		.uleb128 0xb
+ 838 0022 0B       		.uleb128 0xb
+ 839 0023 3E       		.uleb128 0x3e
+ 840 0024 0B       		.uleb128 0xb
+ 841 0025 03       		.uleb128 0x3
+ 842 0026 08       		.uleb128 0x8
+ 843 0027 00       		.byte	0
+ 844 0028 00       		.byte	0
+ 845 0029 04       		.uleb128 0x4
+ 846 002a 16       		.uleb128 0x16
+ 847 002b 00       		.byte	0
+ 848 002c 03       		.uleb128 0x3
+ 849 002d 0E       		.uleb128 0xe
+ 850 002e 3A       		.uleb128 0x3a
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 20
+
+
+ 851 002f 0B       		.uleb128 0xb
+ 852 0030 3B       		.uleb128 0x3b
+ 853 0031 05       		.uleb128 0x5
+ 854 0032 49       		.uleb128 0x49
+ 855 0033 13       		.uleb128 0x13
+ 856 0034 00       		.byte	0
+ 857 0035 00       		.byte	0
+ 858 0036 05       		.uleb128 0x5
+ 859 0037 35       		.uleb128 0x35
+ 860 0038 00       		.byte	0
+ 861 0039 49       		.uleb128 0x49
+ 862 003a 13       		.uleb128 0x13
+ 863 003b 00       		.byte	0
+ 864 003c 00       		.byte	0
+ 865 003d 06       		.uleb128 0x6
+ 866 003e 13       		.uleb128 0x13
+ 867 003f 01       		.byte	0x1
+ 868 0040 0B       		.uleb128 0xb
+ 869 0041 0B       		.uleb128 0xb
+ 870 0042 3A       		.uleb128 0x3a
+ 871 0043 0B       		.uleb128 0xb
+ 872 0044 3B       		.uleb128 0x3b
+ 873 0045 0B       		.uleb128 0xb
+ 874 0046 01       		.uleb128 0x1
+ 875 0047 13       		.uleb128 0x13
+ 876 0048 00       		.byte	0
+ 877 0049 00       		.byte	0
+ 878 004a 07       		.uleb128 0x7
+ 879 004b 0D       		.uleb128 0xd
+ 880 004c 00       		.byte	0
+ 881 004d 03       		.uleb128 0x3
+ 882 004e 0E       		.uleb128 0xe
+ 883 004f 3A       		.uleb128 0x3a
+ 884 0050 0B       		.uleb128 0xb
+ 885 0051 3B       		.uleb128 0x3b
+ 886 0052 0B       		.uleb128 0xb
+ 887 0053 49       		.uleb128 0x49
+ 888 0054 13       		.uleb128 0x13
+ 889 0055 38       		.uleb128 0x38
+ 890 0056 0B       		.uleb128 0xb
+ 891 0057 00       		.byte	0
+ 892 0058 00       		.byte	0
+ 893 0059 08       		.uleb128 0x8
+ 894 005a 01       		.uleb128 0x1
+ 895 005b 01       		.byte	0x1
+ 896 005c 49       		.uleb128 0x49
+ 897 005d 13       		.uleb128 0x13
+ 898 005e 01       		.uleb128 0x1
+ 899 005f 13       		.uleb128 0x13
+ 900 0060 00       		.byte	0
+ 901 0061 00       		.byte	0
+ 902 0062 09       		.uleb128 0x9
+ 903 0063 21       		.uleb128 0x21
+ 904 0064 00       		.byte	0
+ 905 0065 49       		.uleb128 0x49
+ 906 0066 13       		.uleb128 0x13
+ 907 0067 2F       		.uleb128 0x2f
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 21
+
+
+ 908 0068 0B       		.uleb128 0xb
+ 909 0069 00       		.byte	0
+ 910 006a 00       		.byte	0
+ 911 006b 0A       		.uleb128 0xa
+ 912 006c 16       		.uleb128 0x16
+ 913 006d 00       		.byte	0
+ 914 006e 03       		.uleb128 0x3
+ 915 006f 0E       		.uleb128 0xe
+ 916 0070 3A       		.uleb128 0x3a
+ 917 0071 0B       		.uleb128 0xb
+ 918 0072 3B       		.uleb128 0x3b
+ 919 0073 0B       		.uleb128 0xb
+ 920 0074 49       		.uleb128 0x49
+ 921 0075 13       		.uleb128 0x13
+ 922 0076 00       		.byte	0
+ 923 0077 00       		.byte	0
+ 924 0078 0B       		.uleb128 0xb
+ 925 0079 0D       		.uleb128 0xd
+ 926 007a 00       		.byte	0
+ 927 007b 03       		.uleb128 0x3
+ 928 007c 08       		.uleb128 0x8
+ 929 007d 3A       		.uleb128 0x3a
+ 930 007e 0B       		.uleb128 0xb
+ 931 007f 3B       		.uleb128 0x3b
+ 932 0080 0B       		.uleb128 0xb
+ 933 0081 49       		.uleb128 0x49
+ 934 0082 13       		.uleb128 0x13
+ 935 0083 38       		.uleb128 0x38
+ 936 0084 0B       		.uleb128 0xb
+ 937 0085 00       		.byte	0
+ 938 0086 00       		.byte	0
+ 939 0087 0C       		.uleb128 0xc
+ 940 0088 0F       		.uleb128 0xf
+ 941 0089 00       		.byte	0
+ 942 008a 0B       		.uleb128 0xb
+ 943 008b 0B       		.uleb128 0xb
+ 944 008c 49       		.uleb128 0x49
+ 945 008d 13       		.uleb128 0x13
+ 946 008e 00       		.byte	0
+ 947 008f 00       		.byte	0
+ 948 0090 0D       		.uleb128 0xd
+ 949 0091 2E       		.uleb128 0x2e
+ 950 0092 00       		.byte	0
+ 951 0093 3F       		.uleb128 0x3f
+ 952 0094 19       		.uleb128 0x19
+ 953 0095 03       		.uleb128 0x3
+ 954 0096 0E       		.uleb128 0xe
+ 955 0097 3A       		.uleb128 0x3a
+ 956 0098 0B       		.uleb128 0xb
+ 957 0099 3B       		.uleb128 0x3b
+ 958 009a 0B       		.uleb128 0xb
+ 959 009b 27       		.uleb128 0x27
+ 960 009c 19       		.uleb128 0x19
+ 961 009d 11       		.uleb128 0x11
+ 962 009e 01       		.uleb128 0x1
+ 963 009f 12       		.uleb128 0x12
+ 964 00a0 06       		.uleb128 0x6
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 22
+
+
+ 965 00a1 40       		.uleb128 0x40
+ 966 00a2 18       		.uleb128 0x18
+ 967 00a3 9742     		.uleb128 0x2117
+ 968 00a5 19       		.uleb128 0x19
+ 969 00a6 00       		.byte	0
+ 970 00a7 00       		.byte	0
+ 971 00a8 0E       		.uleb128 0xe
+ 972 00a9 2E       		.uleb128 0x2e
+ 973 00aa 01       		.byte	0x1
+ 974 00ab 3F       		.uleb128 0x3f
+ 975 00ac 19       		.uleb128 0x19
+ 976 00ad 03       		.uleb128 0x3
+ 977 00ae 0E       		.uleb128 0xe
+ 978 00af 3A       		.uleb128 0x3a
+ 979 00b0 0B       		.uleb128 0xb
+ 980 00b1 3B       		.uleb128 0x3b
+ 981 00b2 0B       		.uleb128 0xb
+ 982 00b3 49       		.uleb128 0x49
+ 983 00b4 13       		.uleb128 0x13
+ 984 00b5 8701     		.uleb128 0x87
+ 985 00b7 19       		.uleb128 0x19
+ 986 00b8 11       		.uleb128 0x11
+ 987 00b9 01       		.uleb128 0x1
+ 988 00ba 12       		.uleb128 0x12
+ 989 00bb 06       		.uleb128 0x6
+ 990 00bc 40       		.uleb128 0x40
+ 991 00bd 18       		.uleb128 0x18
+ 992 00be 9642     		.uleb128 0x2116
+ 993 00c0 19       		.uleb128 0x19
+ 994 00c1 01       		.uleb128 0x1
+ 995 00c2 13       		.uleb128 0x13
+ 996 00c3 00       		.byte	0
+ 997 00c4 00       		.byte	0
+ 998 00c5 0F       		.uleb128 0xf
+ 999 00c6 34       		.uleb128 0x34
+ 1000 00c7 00       		.byte	0
+ 1001 00c8 03       		.uleb128 0x3
+ 1002 00c9 0E       		.uleb128 0xe
+ 1003 00ca 3A       		.uleb128 0x3a
+ 1004 00cb 0B       		.uleb128 0xb
+ 1005 00cc 3B       		.uleb128 0x3b
+ 1006 00cd 0B       		.uleb128 0xb
+ 1007 00ce 49       		.uleb128 0x49
+ 1008 00cf 13       		.uleb128 0x13
+ 1009 00d0 02       		.uleb128 0x2
+ 1010 00d1 18       		.uleb128 0x18
+ 1011 00d2 00       		.byte	0
+ 1012 00d3 00       		.byte	0
+ 1013 00d4 10       		.uleb128 0x10
+ 1014 00d5 898201   		.uleb128 0x4109
+ 1015 00d8 00       		.byte	0
+ 1016 00d9 11       		.uleb128 0x11
+ 1017 00da 01       		.uleb128 0x1
+ 1018 00db 31       		.uleb128 0x31
+ 1019 00dc 13       		.uleb128 0x13
+ 1020 00dd 00       		.byte	0
+ 1021 00de 00       		.byte	0
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 23
+
+
+ 1022 00df 11       		.uleb128 0x11
+ 1023 00e0 898201   		.uleb128 0x4109
+ 1024 00e3 01       		.byte	0x1
+ 1025 00e4 11       		.uleb128 0x11
+ 1026 00e5 01       		.uleb128 0x1
+ 1027 00e6 31       		.uleb128 0x31
+ 1028 00e7 13       		.uleb128 0x13
+ 1029 00e8 01       		.uleb128 0x1
+ 1030 00e9 13       		.uleb128 0x13
+ 1031 00ea 00       		.byte	0
+ 1032 00eb 00       		.byte	0
+ 1033 00ec 12       		.uleb128 0x12
+ 1034 00ed 8A8201   		.uleb128 0x410a
+ 1035 00f0 00       		.byte	0
+ 1036 00f1 02       		.uleb128 0x2
+ 1037 00f2 18       		.uleb128 0x18
+ 1038 00f3 9142     		.uleb128 0x2111
+ 1039 00f5 18       		.uleb128 0x18
+ 1040 00f6 00       		.byte	0
+ 1041 00f7 00       		.byte	0
+ 1042 00f8 13       		.uleb128 0x13
+ 1043 00f9 898201   		.uleb128 0x4109
+ 1044 00fc 01       		.byte	0x1
+ 1045 00fd 11       		.uleb128 0x11
+ 1046 00fe 01       		.uleb128 0x1
+ 1047 00ff 31       		.uleb128 0x31
+ 1048 0100 13       		.uleb128 0x13
+ 1049 0101 00       		.byte	0
+ 1050 0102 00       		.byte	0
+ 1051 0103 14       		.uleb128 0x14
+ 1052 0104 34       		.uleb128 0x34
+ 1053 0105 00       		.byte	0
+ 1054 0106 03       		.uleb128 0x3
+ 1055 0107 0E       		.uleb128 0xe
+ 1056 0108 3A       		.uleb128 0x3a
+ 1057 0109 0B       		.uleb128 0xb
+ 1058 010a 3B       		.uleb128 0x3b
+ 1059 010b 0B       		.uleb128 0xb
+ 1060 010c 49       		.uleb128 0x49
+ 1061 010d 13       		.uleb128 0x13
+ 1062 010e 3F       		.uleb128 0x3f
+ 1063 010f 19       		.uleb128 0x19
+ 1064 0110 02       		.uleb128 0x2
+ 1065 0111 18       		.uleb128 0x18
+ 1066 0112 00       		.byte	0
+ 1067 0113 00       		.byte	0
+ 1068 0114 15       		.uleb128 0x15
+ 1069 0115 2E       		.uleb128 0x2e
+ 1070 0116 00       		.byte	0
+ 1071 0117 3F       		.uleb128 0x3f
+ 1072 0118 19       		.uleb128 0x19
+ 1073 0119 3C       		.uleb128 0x3c
+ 1074 011a 19       		.uleb128 0x19
+ 1075 011b 6E       		.uleb128 0x6e
+ 1076 011c 0E       		.uleb128 0xe
+ 1077 011d 03       		.uleb128 0x3
+ 1078 011e 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 24
+
+
+ 1079 011f 3A       		.uleb128 0x3a
+ 1080 0120 0B       		.uleb128 0xb
+ 1081 0121 3B       		.uleb128 0x3b
+ 1082 0122 0B       		.uleb128 0xb
+ 1083 0123 00       		.byte	0
+ 1084 0124 00       		.byte	0
+ 1085 0125 16       		.uleb128 0x16
+ 1086 0126 2E       		.uleb128 0x2e
+ 1087 0127 00       		.byte	0
+ 1088 0128 3F       		.uleb128 0x3f
+ 1089 0129 19       		.uleb128 0x19
+ 1090 012a 3C       		.uleb128 0x3c
+ 1091 012b 19       		.uleb128 0x19
+ 1092 012c 6E       		.uleb128 0x6e
+ 1093 012d 0E       		.uleb128 0xe
+ 1094 012e 03       		.uleb128 0x3
+ 1095 012f 0E       		.uleb128 0xe
+ 1096 0130 3A       		.uleb128 0x3a
+ 1097 0131 0B       		.uleb128 0xb
+ 1098 0132 3B       		.uleb128 0x3b
+ 1099 0133 05       		.uleb128 0x5
+ 1100 0134 00       		.byte	0
+ 1101 0135 00       		.byte	0
+ 1102 0136 00       		.byte	0
+ 1103              		.section	.debug_aranges,"",%progbits
+ 1104 0000 24000000 		.4byte	0x24
+ 1105 0004 0200     		.2byte	0x2
+ 1106 0006 00000000 		.4byte	.Ldebug_info0
+ 1107 000a 04       		.byte	0x4
+ 1108 000b 00       		.byte	0
+ 1109 000c 0000     		.2byte	0
+ 1110 000e 0000     		.2byte	0
+ 1111 0010 00000000 		.4byte	.LFB36
+ 1112 0014 4C000000 		.4byte	.LFE36-.LFB36
+ 1113 0018 00000000 		.4byte	.LFB35
+ 1114 001c F0000000 		.4byte	.LFE35-.LFB35
+ 1115 0020 00000000 		.4byte	0
+ 1116 0024 00000000 		.4byte	0
+ 1117              		.section	.debug_ranges,"",%progbits
+ 1118              	.Ldebug_ranges0:
+ 1119 0000 00000000 		.4byte	.LFB36
+ 1120 0004 4C000000 		.4byte	.LFE36
+ 1121 0008 00000000 		.4byte	.LFB35
+ 1122 000c F0000000 		.4byte	.LFE35
+ 1123 0010 00000000 		.4byte	0
+ 1124 0014 00000000 		.4byte	0
+ 1125              		.section	.debug_line,"",%progbits
+ 1126              	.Ldebug_line0:
+ 1127 0000 2F010000 		.section	.debug_str,"MS",%progbits,1
+ 1127      0200E500 
+ 1127      00000201 
+ 1127      FB0E0D00 
+ 1127      01010101 
+ 1128              	.LASF17:
+ 1129 0000 72656733 		.ascii	"reg32\000"
+ 1129      3200
+ 1130              	.LASF22:
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 25
+
+
+ 1131 0006 43414E5F 		.ascii	"CAN_DATA_BYTES\000"
+ 1131      44415441 
+ 1131      5F425954 
+ 1131      455300
+ 1132              	.LASF25:
+ 1133 0015 7278636D 		.ascii	"rxcmd\000"
+ 1133      6400
+ 1134              	.LASF14:
+ 1135 001b 63686172 		.ascii	"char8\000"
+ 1135      3800
+ 1136              	.LASF28:
+ 1137 0021 7278616D 		.ascii	"rxamr\000"
+ 1137      7200
+ 1138              	.LASF47:
+ 1139 0027 433A5C55 		.ascii	"C:\\Users\\Melody\\Desktop\\Programming Stuff\\Dash"
+ 1139      73657273 
+ 1139      5C4D656C 
+ 1139      6F64795C 
+ 1139      4465736B 
+ 1140 0055 626F6172 		.ascii	"board-Firmware-FE9-main\\Dashboard-Firmware-FE9\\CA"
+ 1140      642D4669 
+ 1140      726D7761 
+ 1140      72652D46 
+ 1140      45392D6D 
+ 1141 0086 4E5F4675 		.ascii	"N_Full_P4_Example01.cydsn\000"
+ 1141      6C6C5F50 
+ 1141      345F4578 
+ 1141      616D706C 
+ 1141      6530312E 
+ 1142              	.LASF33:
+ 1143 00a0 74784461 		.ascii	"txData\000"
+ 1143      746100
+ 1144              	.LASF4:
+ 1145 00a7 6C6F6E67 		.ascii	"long int\000"
+ 1145      20696E74 
+ 1145      00
+ 1146              	.LASF23:
+ 1147 00b0 43414E5F 		.ascii	"CAN_REG_32\000"
+ 1147      5245475F 
+ 1147      333200
+ 1148              	.LASF38:
+ 1149 00bb 72656365 		.ascii	"receiveMailboxNumber\000"
+ 1149      6976654D 
+ 1149      61696C62 
+ 1149      6F784E75 
+ 1149      6D626572 
+ 1150              	.LASF8:
+ 1151 00d0 756E7369 		.ascii	"unsigned int\000"
+ 1151      676E6564 
+ 1151      20696E74 
+ 1151      00
+ 1152              	.LASF21:
+ 1153 00dd 62797465 		.ascii	"byte\000"
+ 1153      00
+ 1154              	.LASF27:
+ 1155 00e2 72786461 		.ascii	"rxdata\000"
+ 1155      746100
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 26
+
+
+ 1156              	.LASF31:
+ 1157 00e9 72786163 		.ascii	"rxacrd\000"
+ 1157      726400
+ 1158              	.LASF42:
+ 1159 00f0 55415254 		.ascii	"UART_UartPutString\000"
+ 1159      5F556172 
+ 1159      74507574 
+ 1159      53747269 
+ 1159      6E6700
+ 1160              	.LASF12:
+ 1161 0103 666C6F61 		.ascii	"float\000"
+ 1161      7400
+ 1162              	.LASF24:
+ 1163 0109 43414E5F 		.ascii	"CAN_TX_MSG\000"
+ 1163      54585F4D 
+ 1163      534700
+ 1164              	.LASF43:
+ 1165 0114 43414E5F 		.ascii	"CAN_SendMsg\000"
+ 1165      53656E64 
+ 1165      4D736700 
+ 1166              	.LASF1:
+ 1167 0120 756E7369 		.ascii	"unsigned char\000"
+ 1167      676E6564 
+ 1167      20636861 
+ 1167      7200
+ 1168              	.LASF26:
+ 1169 012e 72786964 		.ascii	"rxid\000"
+ 1169      00
+ 1170              	.LASF16:
+ 1171 0133 72656738 		.ascii	"reg8\000"
+ 1171      00
+ 1172              	.LASF36:
+ 1173 0138 6D657373 		.ascii	"messagePWM\000"
+ 1173      61676550 
+ 1173      574D00
+ 1174              	.LASF5:
+ 1175 0143 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1175      20756E73 
+ 1175      69676E65 
+ 1175      6420696E 
+ 1175      7400
+ 1176              	.LASF3:
+ 1177 0155 73686F72 		.ascii	"short unsigned int\000"
+ 1177      7420756E 
+ 1177      7369676E 
+ 1177      65642069 
+ 1177      6E7400
+ 1178              	.LASF39:
+ 1179 0168 55415254 		.ascii	"UART_Start\000"
+ 1179      5F537461 
+ 1179      727400
+ 1180              	.LASF20:
+ 1181 0173 43414E5F 		.ascii	"CAN_DATA_BYTES_MSG\000"
+ 1181      44415441 
+ 1181      5F425954 
+ 1181      45535F4D 
+ 1181      534700
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 27
+
+
+ 1182              	.LASF13:
+ 1183 0186 646F7562 		.ascii	"double\000"
+ 1183      6C6500
+ 1184              	.LASF37:
+ 1185 018d 70756C73 		.ascii	"pulseWidthValue\000"
+ 1185      65576964 
+ 1185      74685661 
+ 1185      6C756500 
+ 1186              	.LASF2:
+ 1187 019d 73686F72 		.ascii	"short int\000"
+ 1187      7420696E 
+ 1187      7400
+ 1188              	.LASF10:
+ 1189 01a7 75696E74 		.ascii	"uint16\000"
+ 1189      313600
+ 1190              	.LASF11:
+ 1191 01ae 75696E74 		.ascii	"uint32\000"
+ 1191      333200
+ 1192              	.LASF49:
+ 1193 01b5 6D61696E 		.ascii	"main\000"
+ 1193      00
+ 1194              	.LASF41:
+ 1195 01ba 4379496E 		.ascii	"CyIntSetVector\000"
+ 1195      74536574 
+ 1195      56656374 
+ 1195      6F7200
+ 1196              	.LASF34:
+ 1197 01c9 61646344 		.ascii	"adcData\000"
+ 1197      61746100 
+ 1198              	.LASF7:
+ 1199 01d1 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1199      206C6F6E 
+ 1199      6720756E 
+ 1199      7369676E 
+ 1199      65642069 
+ 1200              	.LASF48:
+ 1201 01e8 4953525F 		.ascii	"ISR_CAN\000"
+ 1201      43414E00 
+ 1202              	.LASF32:
+ 1203 01f0 43414E5F 		.ascii	"CAN_RX_STRUCT\000"
+ 1203      52585F53 
+ 1203      54525543 
+ 1203      5400
+ 1204              	.LASF45:
+ 1205 01fe 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 1205      43313120 
+ 1205      352E342E 
+ 1205      31203230 
+ 1205      31363036 
+ 1206 0231 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0 -mthumb -g -O"
+ 1206      20726576 
+ 1206      6973696F 
+ 1206      6E203233 
+ 1206      37373135 
+ 1207 0264 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1207      66756E63 
+ 1207      74696F6E 
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccMEW7bb.s 			page 28
+
+
+ 1207      2D736563 
+ 1207      74696F6E 
+ 1208              	.LASF19:
+ 1209 028c 73697A65 		.ascii	"sizetype\000"
+ 1209      74797065 
+ 1209      00
+ 1210              	.LASF30:
+ 1211 0295 7278616D 		.ascii	"rxamrd\000"
+ 1211      726400
+ 1212              	.LASF6:
+ 1213 029c 6C6F6E67 		.ascii	"long long int\000"
+ 1213      206C6F6E 
+ 1213      6720696E 
+ 1213      7400
+ 1214              	.LASF46:
+ 1215 02aa 6D61696E 		.ascii	"main.c\000"
+ 1215      2E6300
+ 1216              	.LASF15:
+ 1217 02b1 63686172 		.ascii	"char\000"
+ 1217      00
+ 1218              	.LASF35:
+ 1219 02b6 64617461 		.ascii	"dataPWM\000"
+ 1219      50574D00 
+ 1220              	.LASF29:
+ 1221 02be 72786163 		.ascii	"rxacr\000"
+ 1221      7200
+ 1222              	.LASF9:
+ 1223 02c4 75696E74 		.ascii	"uint8\000"
+ 1223      3800
+ 1224              	.LASF18:
+ 1225 02ca 6C6F6E67 		.ascii	"long double\000"
+ 1225      20646F75 
+ 1225      626C6500 
+ 1226              	.LASF0:
+ 1227 02d6 7369676E 		.ascii	"signed char\000"
+ 1227      65642063 
+ 1227      68617200 
+ 1228              	.LASF44:
+ 1229 02e2 73707269 		.ascii	"sprintf\000"
+ 1229      6E746600 
+ 1230              	.LASF40:
+ 1231 02ea 43414E5F 		.ascii	"CAN_Start\000"
+ 1231      53746172 
+ 1231      7400
+ 1232              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

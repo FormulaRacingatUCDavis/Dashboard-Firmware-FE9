@@ -1,0 +1,45 @@
+net ClockBlock_HFClk
+	term   ":m0s8clockblockcell.hfclk"
+	switch ":m0s8clockblockcell.hfclk==>:interrupt_27.clock"
+	term   ":interrupt_27.clock"
+	switch ":m0s8clockblockcell.hfclk==>:interrupt_28.clock"
+	term   ":interrupt_28.clock"
+end ClockBlock_HFClk
+net Net_10
+	term   ":cancell_0.interrupt"
+	switch ":cancell_0.interrupt==>:interrupt_idmux_27.in_0"
+	switch ":interrupt_idmux_27.interrupt_idmux_27__out==>:interrupt_27.interrupt"
+	term   ":interrupt_27.interrupt"
+end Net_10
+net Net_11
+	term   ":ioport4:pin0.fb"
+	switch ":ioport4:pin0.fb==>:ioport4:hsiom_in0.hsiom0_in"
+	switch ":ioport4:hsiom_in0.fixed_ACT_2==>:cancell_0__can_rx__hsiom_permute.ioport4__fixed_out_p0_ACT_2"
+	switch ":cancell_0__can_rx__hsiom_permute.cancell_0__can_rx==>:cancell_0.can_rx"
+	term   ":cancell_0.can_rx"
+end Net_11
+net Net_12
+	term   ":cancell_0.can_tx"
+	switch ":cancell_0.can_tx==>:ioport4:hsiom_out1.fixed_ACT_2"
+	switch ":ioport4:hsiom_out1.hsiom1_out==>:ioport4:pin1.pin_input"
+	term   ":ioport4:pin1.pin_input"
+end Net_12
+net Net_4
+	term   ":ioport4:pin5.fb"
+	switch ":ioport4:pin5.fb==>:ioport4:hsiom_in5.hsiom5_in"
+	switch ":ioport4:hsiom_in5.fixed_ACT_2==>:cancell_1__can_rx__hsiom_permute.ioport4__fixed_out_p5_ACT_2"
+	switch ":cancell_1__can_rx__hsiom_permute.cancell_1__can_rx==>:cancell_1.can_rx"
+	term   ":cancell_1.can_rx"
+end Net_4
+net Net_5
+	term   ":cancell_1.can_tx"
+	switch ":cancell_1.can_tx==>:ioport4:hsiom_out6.fixed_ACT_2"
+	switch ":ioport4:hsiom_out6.hsiom6_out==>:ioport4:pin6.pin_input"
+	term   ":ioport4:pin6.pin_input"
+end Net_5
+net Net_6
+	term   ":cancell_1.interrupt"
+	switch ":cancell_1.interrupt==>:interrupt_idmux_28.in_0"
+	switch ":interrupt_idmux_28.interrupt_idmux_28__out==>:interrupt_28.interrupt"
+	term   ":interrupt_28.interrupt"
+end Net_6
