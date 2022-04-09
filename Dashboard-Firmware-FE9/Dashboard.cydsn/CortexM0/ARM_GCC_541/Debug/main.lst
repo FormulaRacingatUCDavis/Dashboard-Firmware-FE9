@@ -1,0 +1,582 @@
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccfCwGA0.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"main.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.main,"ax",%progbits
+  20              		.align	2
+  21              		.global	main
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	main, %function
+  25              	main:
+  26              	.LFB35:
+  27              		.file 1 "main.c"
+   1:main.c        **** /* ========================================
+   2:main.c        ****  *
+   3:main.c        ****  * Copyright YOUR COMPANY, THE YEAR
+   4:main.c        ****  * All Rights Reserved
+   5:main.c        ****  * UNPUBLISHED, LICENSED SOFTWARE.
+   6:main.c        ****  *
+   7:main.c        ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+   8:main.c        ****  * WHICH IS THE PROPERTY OF your company.
+   9:main.c        ****  *
+  10:main.c        ****  * ========================================
+  11:main.c        **** */
+  12:main.c        **** #include "project.h"
+  13:main.c        **** #include <stdio.h>
+  14:main.c        **** #include "can_manga.h"
+  15:main.c        **** 
+  16:main.c        **** int main(void)
+  17:main.c        **** {
+  28              		.loc 1 17 0
+  29              		.cfi_startproc
+  30              		@ Volatile: function does not return.
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33 0000 10B5     		push	{r4, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  18:main.c        ****     CyGlobalIntEnable; /* Enable global interrupts. */
+  37              		.loc 1 18 0
+  38              		.syntax divided
+  39              	@ 18 "main.c" 1
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccfCwGA0.s 			page 2
+
+
+  40 0002 62B6     		CPSIE   i
+  41              	@ 0 "" 2
+  42              		.thumb
+  43              		.syntax unified
+  44              	.L4:
+  19:main.c        **** 
+  20:main.c        ****     /* Place your initialization/startup code here (e.g. MyInst_Start()) */
+  21:main.c        **** 
+  22:main.c        ****     for(;;)
+  23:main.c        ****     {
+  24:main.c        ****         /* Place your application code here. */
+  25:main.c        ****         
+  26:main.c        ****         if( HV_Request_Read()) {
+  45              		.loc 1 26 0
+  46 0004 FFF7FEFF 		bl	HV_Request_Read
+  47              	.LVL0:
+  48 0008 0028     		cmp	r0, #0
+  49 000a 02D0     		beq	.L2
+  27:main.c        ****             printf("HV_Request");
+  50              		.loc 1 27 0
+  51 000c 0748     		ldr	r0, .L5
+  52 000e FFF7FEFF 		bl	printf
+  53              	.LVL1:
+  54              	.L2:
+  28:main.c        ****         }
+  29:main.c        ****         if( Drive_Request_Read()) {
+  55              		.loc 1 29 0
+  56 0012 FFF7FEFF 		bl	Drive_Request_Read
+  57              	.LVL2:
+  58 0016 0028     		cmp	r0, #0
+  59 0018 02D0     		beq	.L3
+  30:main.c        ****             printf("Drive_Request");
+  60              		.loc 1 30 0
+  61 001a 0548     		ldr	r0, .L5+4
+  62 001c FFF7FEFF 		bl	printf
+  63              	.LVL3:
+  64              	.L3:
+  31:main.c        ****         }
+  32:main.c        ****         
+  33:main.c        ****         // send dummy values over CAN
+  34:main.c        ****         can_send_status(1, 2);
+  65              		.loc 1 34 0
+  66 0020 0221     		movs	r1, #2
+  67 0022 0120     		movs	r0, #1
+  68 0024 FFF7FEFF 		bl	can_send_status
+  69              	.LVL4:
+  35:main.c        ****     }
+  70              		.loc 1 35 0
+  71 0028 ECE7     		b	.L4
+  72              	.L6:
+  73 002a C046     		.align	2
+  74              	.L5:
+  75 002c 00000000 		.word	.LC0
+  76 0030 0C000000 		.word	.LC2
+  77              		.cfi_endproc
+  78              	.LFE35:
+  79              		.size	main, .-main
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccfCwGA0.s 			page 3
+
+
+  80              		.section	.rodata.str1.4,"aMS",%progbits,1
+  81              		.align	2
+  82              	.LC0:
+  83 0000 48565F52 		.ascii	"HV_Request\000"
+  83      65717565 
+  83      737400
+  84 000b 00       		.space	1
+  85              	.LC2:
+  86 000c 44726976 		.ascii	"Drive_Request\000"
+  86      655F5265 
+  86      71756573 
+  86      7400
+  87              		.text
+  88              	.Letext0:
+  89              		.file 2 "Generated_Source\\PSoC4/HV_Request.h"
+  90              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+  91              		.file 4 "Generated_Source\\PSoC4/Drive_Request.h"
+  92              		.file 5 "can_manga.h"
+  93              		.section	.debug_info,"",%progbits
+  94              	.Ldebug_info0:
+  95 0000 25010000 		.4byte	0x125
+  96 0004 0400     		.2byte	0x4
+  97 0006 00000000 		.4byte	.Ldebug_abbrev0
+  98 000a 04       		.byte	0x4
+  99 000b 01       		.uleb128 0x1
+ 100 000c 8F000000 		.4byte	.LASF18
+ 101 0010 0C       		.byte	0xc
+ 102 0011 1B000000 		.4byte	.LASF19
+ 103 0015 66010000 		.4byte	.LASF20
+ 104 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 105 001d 00000000 		.4byte	0
+ 106 0021 00000000 		.4byte	.Ldebug_line0
+ 107 0025 02       		.uleb128 0x2
+ 108 0026 01       		.byte	0x1
+ 109 0027 06       		.byte	0x6
+ 110 0028 27000000 		.4byte	.LASF0
+ 111 002c 02       		.uleb128 0x2
+ 112 002d 01       		.byte	0x1
+ 113 002e 08       		.byte	0x8
+ 114 002f 6C000000 		.4byte	.LASF1
+ 115 0033 02       		.uleb128 0x2
+ 116 0034 02       		.byte	0x2
+ 117 0035 05       		.byte	0x5
+ 118 0036 5C010000 		.4byte	.LASF2
+ 119 003a 02       		.uleb128 0x2
+ 120 003b 02       		.byte	0x2
+ 121 003c 07       		.byte	0x7
+ 122 003d 1D010000 		.4byte	.LASF3
+ 123 0041 02       		.uleb128 0x2
+ 124 0042 04       		.byte	0x4
+ 125 0043 05       		.byte	0x5
+ 126 0044 7F000000 		.4byte	.LASF4
+ 127 0048 02       		.uleb128 0x2
+ 128 0049 04       		.byte	0x4
+ 129 004a 07       		.byte	0x7
+ 130 004b 43000000 		.4byte	.LASF5
+ 131 004f 02       		.uleb128 0x2
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccfCwGA0.s 			page 4
+
+
+ 132 0050 08       		.byte	0x8
+ 133 0051 05       		.byte	0x5
+ 134 0052 00000000 		.4byte	.LASF6
+ 135 0056 02       		.uleb128 0x2
+ 136 0057 08       		.byte	0x8
+ 137 0058 07       		.byte	0x7
+ 138 0059 55000000 		.4byte	.LASF7
+ 139 005d 03       		.uleb128 0x3
+ 140 005e 04       		.byte	0x4
+ 141 005f 05       		.byte	0x5
+ 142 0060 696E7400 		.ascii	"int\000"
+ 143 0064 02       		.uleb128 0x2
+ 144 0065 04       		.byte	0x4
+ 145 0066 07       		.byte	0x7
+ 146 0067 0E000000 		.4byte	.LASF8
+ 147 006b 02       		.uleb128 0x2
+ 148 006c 04       		.byte	0x4
+ 149 006d 04       		.byte	0x4
+ 150 006e 56010000 		.4byte	.LASF9
+ 151 0072 02       		.uleb128 0x2
+ 152 0073 08       		.byte	0x8
+ 153 0074 04       		.byte	0x4
+ 154 0075 88000000 		.4byte	.LASF10
+ 155 0079 02       		.uleb128 0x2
+ 156 007a 01       		.byte	0x1
+ 157 007b 08       		.byte	0x8
+ 158 007c 7A000000 		.4byte	.LASF11
+ 159 0080 02       		.uleb128 0x2
+ 160 0081 08       		.byte	0x8
+ 161 0082 04       		.byte	0x4
+ 162 0083 37010000 		.4byte	.LASF12
+ 163 0087 02       		.uleb128 0x2
+ 164 0088 04       		.byte	0x4
+ 165 0089 07       		.byte	0x7
+ 166 008a E4010000 		.4byte	.LASF13
+ 167 008e 04       		.uleb128 0x4
+ 168 008f 22000000 		.4byte	.LASF21
+ 169 0093 01       		.byte	0x1
+ 170 0094 10       		.byte	0x10
+ 171 0095 5D000000 		.4byte	0x5d
+ 172 0099 00000000 		.4byte	.LFB35
+ 173 009d 34000000 		.4byte	.LFE35-.LFB35
+ 174 00a1 01       		.uleb128 0x1
+ 175 00a2 9C       		.byte	0x9c
+ 176 00a3 FC000000 		.4byte	0xfc
+ 177 00a7 05       		.uleb128 0x5
+ 178 00a8 08000000 		.4byte	.LVL0
+ 179 00ac FC000000 		.4byte	0xfc
+ 180 00b0 06       		.uleb128 0x6
+ 181 00b1 12000000 		.4byte	.LVL1
+ 182 00b5 07010000 		.4byte	0x107
+ 183 00b9 C7000000 		.4byte	0xc7
+ 184 00bd 07       		.uleb128 0x7
+ 185 00be 01       		.uleb128 0x1
+ 186 00bf 50       		.byte	0x50
+ 187 00c0 05       		.uleb128 0x5
+ 188 00c1 03       		.byte	0x3
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccfCwGA0.s 			page 5
+
+
+ 189 00c2 00000000 		.4byte	.LC0
+ 190 00c6 00       		.byte	0
+ 191 00c7 05       		.uleb128 0x5
+ 192 00c8 16000000 		.4byte	.LVL2
+ 193 00cc 12010000 		.4byte	0x112
+ 194 00d0 06       		.uleb128 0x6
+ 195 00d1 20000000 		.4byte	.LVL3
+ 196 00d5 07010000 		.4byte	0x107
+ 197 00d9 E7000000 		.4byte	0xe7
+ 198 00dd 07       		.uleb128 0x7
+ 199 00de 01       		.uleb128 0x1
+ 200 00df 50       		.byte	0x50
+ 201 00e0 05       		.uleb128 0x5
+ 202 00e1 03       		.byte	0x3
+ 203 00e2 0C000000 		.4byte	.LC2
+ 204 00e6 00       		.byte	0
+ 205 00e7 08       		.uleb128 0x8
+ 206 00e8 28000000 		.4byte	.LVL4
+ 207 00ec 1D010000 		.4byte	0x11d
+ 208 00f0 07       		.uleb128 0x7
+ 209 00f1 01       		.uleb128 0x1
+ 210 00f2 50       		.byte	0x50
+ 211 00f3 01       		.uleb128 0x1
+ 212 00f4 31       		.byte	0x31
+ 213 00f5 07       		.uleb128 0x7
+ 214 00f6 01       		.uleb128 0x1
+ 215 00f7 51       		.byte	0x51
+ 216 00f8 01       		.uleb128 0x1
+ 217 00f9 32       		.byte	0x32
+ 218 00fa 00       		.byte	0
+ 219 00fb 00       		.byte	0
+ 220 00fc 09       		.uleb128 0x9
+ 221 00fd 33000000 		.4byte	.LASF14
+ 222 0101 33000000 		.4byte	.LASF14
+ 223 0105 02       		.byte	0x2
+ 224 0106 32       		.byte	0x32
+ 225 0107 09       		.uleb128 0x9
+ 226 0108 30010000 		.4byte	.LASF15
+ 227 010c 30010000 		.4byte	.LASF15
+ 228 0110 03       		.byte	0x3
+ 229 0111 BB       		.byte	0xbb
+ 230 0112 09       		.uleb128 0x9
+ 231 0113 43010000 		.4byte	.LASF16
+ 232 0117 43010000 		.4byte	.LASF16
+ 233 011b 04       		.byte	0x4
+ 234 011c 32       		.byte	0x32
+ 235 011d 09       		.uleb128 0x9
+ 236 011e D4010000 		.4byte	.LASF17
+ 237 0122 D4010000 		.4byte	.LASF17
+ 238 0126 05       		.byte	0x5
+ 239 0127 1A       		.byte	0x1a
+ 240 0128 00       		.byte	0
+ 241              		.section	.debug_abbrev,"",%progbits
+ 242              	.Ldebug_abbrev0:
+ 243 0000 01       		.uleb128 0x1
+ 244 0001 11       		.uleb128 0x11
+ 245 0002 01       		.byte	0x1
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccfCwGA0.s 			page 6
+
+
+ 246 0003 25       		.uleb128 0x25
+ 247 0004 0E       		.uleb128 0xe
+ 248 0005 13       		.uleb128 0x13
+ 249 0006 0B       		.uleb128 0xb
+ 250 0007 03       		.uleb128 0x3
+ 251 0008 0E       		.uleb128 0xe
+ 252 0009 1B       		.uleb128 0x1b
+ 253 000a 0E       		.uleb128 0xe
+ 254 000b 55       		.uleb128 0x55
+ 255 000c 17       		.uleb128 0x17
+ 256 000d 11       		.uleb128 0x11
+ 257 000e 01       		.uleb128 0x1
+ 258 000f 10       		.uleb128 0x10
+ 259 0010 17       		.uleb128 0x17
+ 260 0011 00       		.byte	0
+ 261 0012 00       		.byte	0
+ 262 0013 02       		.uleb128 0x2
+ 263 0014 24       		.uleb128 0x24
+ 264 0015 00       		.byte	0
+ 265 0016 0B       		.uleb128 0xb
+ 266 0017 0B       		.uleb128 0xb
+ 267 0018 3E       		.uleb128 0x3e
+ 268 0019 0B       		.uleb128 0xb
+ 269 001a 03       		.uleb128 0x3
+ 270 001b 0E       		.uleb128 0xe
+ 271 001c 00       		.byte	0
+ 272 001d 00       		.byte	0
+ 273 001e 03       		.uleb128 0x3
+ 274 001f 24       		.uleb128 0x24
+ 275 0020 00       		.byte	0
+ 276 0021 0B       		.uleb128 0xb
+ 277 0022 0B       		.uleb128 0xb
+ 278 0023 3E       		.uleb128 0x3e
+ 279 0024 0B       		.uleb128 0xb
+ 280 0025 03       		.uleb128 0x3
+ 281 0026 08       		.uleb128 0x8
+ 282 0027 00       		.byte	0
+ 283 0028 00       		.byte	0
+ 284 0029 04       		.uleb128 0x4
+ 285 002a 2E       		.uleb128 0x2e
+ 286 002b 01       		.byte	0x1
+ 287 002c 3F       		.uleb128 0x3f
+ 288 002d 19       		.uleb128 0x19
+ 289 002e 03       		.uleb128 0x3
+ 290 002f 0E       		.uleb128 0xe
+ 291 0030 3A       		.uleb128 0x3a
+ 292 0031 0B       		.uleb128 0xb
+ 293 0032 3B       		.uleb128 0x3b
+ 294 0033 0B       		.uleb128 0xb
+ 295 0034 27       		.uleb128 0x27
+ 296 0035 19       		.uleb128 0x19
+ 297 0036 49       		.uleb128 0x49
+ 298 0037 13       		.uleb128 0x13
+ 299 0038 8701     		.uleb128 0x87
+ 300 003a 19       		.uleb128 0x19
+ 301 003b 11       		.uleb128 0x11
+ 302 003c 01       		.uleb128 0x1
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccfCwGA0.s 			page 7
+
+
+ 303 003d 12       		.uleb128 0x12
+ 304 003e 06       		.uleb128 0x6
+ 305 003f 40       		.uleb128 0x40
+ 306 0040 18       		.uleb128 0x18
+ 307 0041 9742     		.uleb128 0x2117
+ 308 0043 19       		.uleb128 0x19
+ 309 0044 01       		.uleb128 0x1
+ 310 0045 13       		.uleb128 0x13
+ 311 0046 00       		.byte	0
+ 312 0047 00       		.byte	0
+ 313 0048 05       		.uleb128 0x5
+ 314 0049 898201   		.uleb128 0x4109
+ 315 004c 00       		.byte	0
+ 316 004d 11       		.uleb128 0x11
+ 317 004e 01       		.uleb128 0x1
+ 318 004f 31       		.uleb128 0x31
+ 319 0050 13       		.uleb128 0x13
+ 320 0051 00       		.byte	0
+ 321 0052 00       		.byte	0
+ 322 0053 06       		.uleb128 0x6
+ 323 0054 898201   		.uleb128 0x4109
+ 324 0057 01       		.byte	0x1
+ 325 0058 11       		.uleb128 0x11
+ 326 0059 01       		.uleb128 0x1
+ 327 005a 31       		.uleb128 0x31
+ 328 005b 13       		.uleb128 0x13
+ 329 005c 01       		.uleb128 0x1
+ 330 005d 13       		.uleb128 0x13
+ 331 005e 00       		.byte	0
+ 332 005f 00       		.byte	0
+ 333 0060 07       		.uleb128 0x7
+ 334 0061 8A8201   		.uleb128 0x410a
+ 335 0064 00       		.byte	0
+ 336 0065 02       		.uleb128 0x2
+ 337 0066 18       		.uleb128 0x18
+ 338 0067 9142     		.uleb128 0x2111
+ 339 0069 18       		.uleb128 0x18
+ 340 006a 00       		.byte	0
+ 341 006b 00       		.byte	0
+ 342 006c 08       		.uleb128 0x8
+ 343 006d 898201   		.uleb128 0x4109
+ 344 0070 01       		.byte	0x1
+ 345 0071 11       		.uleb128 0x11
+ 346 0072 01       		.uleb128 0x1
+ 347 0073 31       		.uleb128 0x31
+ 348 0074 13       		.uleb128 0x13
+ 349 0075 00       		.byte	0
+ 350 0076 00       		.byte	0
+ 351 0077 09       		.uleb128 0x9
+ 352 0078 2E       		.uleb128 0x2e
+ 353 0079 00       		.byte	0
+ 354 007a 3F       		.uleb128 0x3f
+ 355 007b 19       		.uleb128 0x19
+ 356 007c 3C       		.uleb128 0x3c
+ 357 007d 19       		.uleb128 0x19
+ 358 007e 6E       		.uleb128 0x6e
+ 359 007f 0E       		.uleb128 0xe
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccfCwGA0.s 			page 8
+
+
+ 360 0080 03       		.uleb128 0x3
+ 361 0081 0E       		.uleb128 0xe
+ 362 0082 3A       		.uleb128 0x3a
+ 363 0083 0B       		.uleb128 0xb
+ 364 0084 3B       		.uleb128 0x3b
+ 365 0085 0B       		.uleb128 0xb
+ 366 0086 00       		.byte	0
+ 367 0087 00       		.byte	0
+ 368 0088 00       		.byte	0
+ 369              		.section	.debug_aranges,"",%progbits
+ 370 0000 1C000000 		.4byte	0x1c
+ 371 0004 0200     		.2byte	0x2
+ 372 0006 00000000 		.4byte	.Ldebug_info0
+ 373 000a 04       		.byte	0x4
+ 374 000b 00       		.byte	0
+ 375 000c 0000     		.2byte	0
+ 376 000e 0000     		.2byte	0
+ 377 0010 00000000 		.4byte	.LFB35
+ 378 0014 34000000 		.4byte	.LFE35-.LFB35
+ 379 0018 00000000 		.4byte	0
+ 380 001c 00000000 		.4byte	0
+ 381              		.section	.debug_ranges,"",%progbits
+ 382              	.Ldebug_ranges0:
+ 383 0000 00000000 		.4byte	.LFB35
+ 384 0004 34000000 		.4byte	.LFE35
+ 385 0008 00000000 		.4byte	0
+ 386 000c 00000000 		.4byte	0
+ 387              		.section	.debug_line,"",%progbits
+ 388              	.Ldebug_line0:
+ 389 0000 F5000000 		.section	.debug_str,"MS",%progbits,1
+ 389      0200D900 
+ 389      00000201 
+ 389      FB0E0D00 
+ 389      01010101 
+ 390              	.LASF6:
+ 391 0000 6C6F6E67 		.ascii	"long long int\000"
+ 391      206C6F6E 
+ 391      6720696E 
+ 391      7400
+ 392              	.LASF8:
+ 393 000e 756E7369 		.ascii	"unsigned int\000"
+ 393      676E6564 
+ 393      20696E74 
+ 393      00
+ 394              	.LASF19:
+ 395 001b 6D61696E 		.ascii	"main.c\000"
+ 395      2E6300
+ 396              	.LASF21:
+ 397 0022 6D61696E 		.ascii	"main\000"
+ 397      00
+ 398              	.LASF0:
+ 399 0027 7369676E 		.ascii	"signed char\000"
+ 399      65642063 
+ 399      68617200 
+ 400              	.LASF14:
+ 401 0033 48565F52 		.ascii	"HV_Request_Read\000"
+ 401      65717565 
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccfCwGA0.s 			page 9
+
+
+ 401      73745F52 
+ 401      65616400 
+ 402              	.LASF5:
+ 403 0043 6C6F6E67 		.ascii	"long unsigned int\000"
+ 403      20756E73 
+ 403      69676E65 
+ 403      6420696E 
+ 403      7400
+ 404              	.LASF7:
+ 405 0055 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 405      206C6F6E 
+ 405      6720756E 
+ 405      7369676E 
+ 405      65642069 
+ 406              	.LASF1:
+ 407 006c 756E7369 		.ascii	"unsigned char\000"
+ 407      676E6564 
+ 407      20636861 
+ 407      7200
+ 408              	.LASF11:
+ 409 007a 63686172 		.ascii	"char\000"
+ 409      00
+ 410              	.LASF4:
+ 411 007f 6C6F6E67 		.ascii	"long int\000"
+ 411      20696E74 
+ 411      00
+ 412              	.LASF10:
+ 413 0088 646F7562 		.ascii	"double\000"
+ 413      6C6500
+ 414              	.LASF18:
+ 415 008f 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 415      43313120 
+ 415      352E342E 
+ 415      31203230 
+ 415      31363036 
+ 416 00c2 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0 -mthumb -g -O"
+ 416      20726576 
+ 416      6973696F 
+ 416      6E203233 
+ 416      37373135 
+ 417 00f5 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 417      66756E63 
+ 417      74696F6E 
+ 417      2D736563 
+ 417      74696F6E 
+ 418              	.LASF3:
+ 419 011d 73686F72 		.ascii	"short unsigned int\000"
+ 419      7420756E 
+ 419      7369676E 
+ 419      65642069 
+ 419      6E7400
+ 420              	.LASF15:
+ 421 0130 7072696E 		.ascii	"printf\000"
+ 421      746600
+ 422              	.LASF12:
+ 423 0137 6C6F6E67 		.ascii	"long double\000"
+ 423      20646F75 
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccfCwGA0.s 			page 10
+
+
+ 423      626C6500 
+ 424              	.LASF16:
+ 425 0143 44726976 		.ascii	"Drive_Request_Read\000"
+ 425      655F5265 
+ 425      71756573 
+ 425      745F5265 
+ 425      616400
+ 426              	.LASF9:
+ 427 0156 666C6F61 		.ascii	"float\000"
+ 427      7400
+ 428              	.LASF2:
+ 429 015c 73686F72 		.ascii	"short int\000"
+ 429      7420696E 
+ 429      7400
+ 430              	.LASF20:
+ 431 0166 433A5C55 		.ascii	"C:\\Users\\Melody\\Desktop\\Programming Stuff\\FRUC"
+ 431      73657273 
+ 431      5C4D656C 
+ 431      6F64795C 
+ 431      4465736B 
+ 432 0194 445C4461 		.ascii	"D\\Dashboard-Firmware-FE9\\Dashboard-Firmware-FE9\\"
+ 432      7368626F 
+ 432      6172642D 
+ 432      4669726D 
+ 432      77617265 
+ 433 01c4 44617368 		.ascii	"Dashboard.cydsn\000"
+ 433      626F6172 
+ 433      642E6379 
+ 433      64736E00 
+ 434              	.LASF17:
+ 435 01d4 63616E5F 		.ascii	"can_send_status\000"
+ 435      73656E64 
+ 435      5F737461 
+ 435      74757300 
+ 436              	.LASF13:
+ 437 01e4 73697A65 		.ascii	"sizetype\000"
+ 437      74797065 
+ 437      00
+ 438              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

@@ -10,6 +10,8 @@
  * ========================================
 */
 #include "project.h"
+#include <stdio.h>
+#include "can_manga.h"
 
 int main(void)
 {
@@ -20,6 +22,16 @@ int main(void)
     for(;;)
     {
         /* Place your application code here. */
+        
+        if( HV_Request_Read()) {
+            printf("HV_Request");
+        }
+        if( Drive_Request_Read()) {
+            printf("Drive_Request");
+        }
+        
+        // send dummy values over CAN
+        can_send_status(1, 2);
     }
 }
 

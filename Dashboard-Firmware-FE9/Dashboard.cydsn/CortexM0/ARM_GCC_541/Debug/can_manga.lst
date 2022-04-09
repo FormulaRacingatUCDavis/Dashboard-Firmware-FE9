@@ -1,0 +1,4002 @@
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"can_manga.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.getCapacitorVoltage,"ax",%progbits
+  20              		.align	2
+  21              		.global	getCapacitorVoltage
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	getCapacitorVoltage, %function
+  25              	getCapacitorVoltage:
+  26              	.LFB34:
+  27              		.file 1 "can_manga.c"
+   1:can_manga.c   **** /* ========================================
+   2:can_manga.c   ****  * Can API for FRUCD
+   3:can_manga.c   ****  * Schuyler Alschuler 2016 - 2017
+   4:can_manga.c   ****  * ========================================
+   5:can_manga.c   **** */
+   6:can_manga.c   **** 
+   7:can_manga.c   **** /*******************************************
+   8:can_manga.c   ****  * Used to interface dashboard with CAN bus
+   9:can_manga.c   ****  * some functinality can be found in CAN_TX_RX_func.c
+  10:can_manga.c   ****  * which is a generated source file
+  11:can_manga.c   ****  * see the can component of the top design for specific mailboxes
+  12:can_manga.c   ****  ******************************************/
+  13:can_manga.c   **** 
+  14:can_manga.c   **** #include "CAN_0.h"
+  15:can_manga.c   **** #include "can_manga.h"
+  16:can_manga.c   **** #include "cytypes.h"
+  17:can_manga.c   **** #include "data.h"
+  18:can_manga.c   **** 
+  19:can_manga.c   **** extern volatile uint32_t pedalOK;
+  20:can_manga.c   **** extern volatile double THROTTLE_MULTIPLIER;
+  21:can_manga.c   **** extern const double THROTTLE_MAP[8];
+  22:can_manga.c   **** extern volatile uint8_t PACK_TEMP;
+  23:can_manga.c   **** extern volatile int32 CURRENT;
+  24:can_manga.c   **** extern volatile int ERROR_NODE;
+  25:can_manga.c   **** extern volatile int ERROR_IDX;
+  26:can_manga.c   **** 
+  27:can_manga.c   **** volatile uint8_t CAPACITOR_VOLT = 0;
+  28:can_manga.c   **** volatile uint8_t CURTIS_FAULT_CHECK = 0;
+  29:can_manga.c   **** volatile uint8_t CURTIS_HEART_BEAT_CHECK = 0;
+  30:can_manga.c   **** volatile uint8_t ACK_RX = 0;
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 2
+
+
+  31:can_manga.c   **** volatile uint8_t ERROR_TOLERANCE = 0;
+  32:can_manga.c   **** volatile uint8_t ABS_MOTOR_RPM = 0;
+  33:can_manga.c   **** volatile uint8_t THROTTLE_HIGH = 0;
+  34:can_manga.c   **** volatile uint8_t THROTTLE_LOW = 0;
+  35:can_manga.c   **** 
+  36:can_manga.c   **** volatile uint8_t VOLT_B1;
+  37:can_manga.c   **** volatile uint8_t VOLT_B2;
+  38:can_manga.c   **** volatile uint8_t VOLT_B3;
+  39:can_manga.c   **** volatile uint8_t VOLT_B4;
+  40:can_manga.c   **** extern volatile uint32_t voltage;
+  41:can_manga.c   **** extern volatile BMS_STATUS bms_status;
+  42:can_manga.c   **** 
+  43:can_manga.c   **** 
+  44:can_manga.c   **** uint8 current_bytes[4] = {0};
+  45:can_manga.c   **** 
+  46:can_manga.c   **** // returns voltage of capacitor from motor controller
+  47:can_manga.c   **** uint8_t getCapacitorVoltage()
+  48:can_manga.c   **** {
+  28              		.loc 1 48 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  49:can_manga.c   ****     return CAPACITOR_VOLT;
+  33              		.loc 1 49 0
+  34 0000 014B     		ldr	r3, .L2
+  35 0002 1878     		ldrb	r0, [r3]
+  36 0004 C0B2     		uxtb	r0, r0
+  50:can_manga.c   **** }
+  37              		.loc 1 50 0
+  38              		@ sp needed
+  39 0006 7047     		bx	lr
+  40              	.L3:
+  41              		.align	2
+  42              	.L2:
+  43 0008 00000000 		.word	.LANCHOR0
+  44              		.cfi_endproc
+  45              	.LFE34:
+  46              		.size	getCapacitorVoltage, .-getCapacitorVoltage
+  47              		.section	.text.getCurtisFaultCheck,"ax",%progbits
+  48              		.align	2
+  49              		.global	getCurtisFaultCheck
+  50              		.code	16
+  51              		.thumb_func
+  52              		.type	getCurtisFaultCheck, %function
+  53              	getCurtisFaultCheck:
+  54              	.LFB35:
+  51:can_manga.c   **** 
+  52:can_manga.c   **** // returns true if there is a fault in motor controller
+  53:can_manga.c   **** uint8_t getCurtisFaultCheck()
+  54:can_manga.c   **** {
+  55              		.loc 1 54 0
+  56              		.cfi_startproc
+  57              		@ args = 0, pretend = 0, frame = 0
+  58              		@ frame_needed = 0, uses_anonymous_args = 0
+  59              		@ link register save eliminated.
+  55:can_manga.c   ****     return CURTIS_FAULT_CHECK;
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 3
+
+
+  60              		.loc 1 55 0
+  61 0000 014B     		ldr	r3, .L5
+  62 0002 5878     		ldrb	r0, [r3, #1]
+  63 0004 C0B2     		uxtb	r0, r0
+  56:can_manga.c   **** }
+  64              		.loc 1 56 0
+  65              		@ sp needed
+  66 0006 7047     		bx	lr
+  67              	.L6:
+  68              		.align	2
+  69              	.L5:
+  70 0008 00000000 		.word	.LANCHOR0
+  71              		.cfi_endproc
+  72              	.LFE35:
+  73              		.size	getCurtisFaultCheck, .-getCurtisFaultCheck
+  74              		.section	.text.getCurtisHeartBeatCheck,"ax",%progbits
+  75              		.align	2
+  76              		.global	getCurtisHeartBeatCheck
+  77              		.code	16
+  78              		.thumb_func
+  79              		.type	getCurtisHeartBeatCheck, %function
+  80              	getCurtisHeartBeatCheck:
+  81              	.LFB36:
+  57:can_manga.c   **** 
+  58:can_manga.c   **** // returns true if motor controller node is still active
+  59:can_manga.c   **** // if node is in active check the fault code using 1314
+  60:can_manga.c   **** uint8_t getCurtisHeartBeatCheck()
+  61:can_manga.c   **** {
+  82              		.loc 1 61 0
+  83              		.cfi_startproc
+  84              		@ args = 0, pretend = 0, frame = 0
+  85              		@ frame_needed = 0, uses_anonymous_args = 0
+  86              		@ link register save eliminated.
+  62:can_manga.c   ****     return CURTIS_HEART_BEAT_CHECK;
+  87              		.loc 1 62 0
+  88 0000 014B     		ldr	r3, .L8
+  89 0002 9878     		ldrb	r0, [r3, #2]
+  90 0004 C0B2     		uxtb	r0, r0
+  63:can_manga.c   **** }
+  91              		.loc 1 63 0
+  92              		@ sp needed
+  93 0006 7047     		bx	lr
+  94              	.L9:
+  95              		.align	2
+  96              	.L8:
+  97 0008 00000000 		.word	.LANCHOR0
+  98              		.cfi_endproc
+  99              	.LFE36:
+ 100              		.size	getCurtisHeartBeatCheck, .-getCurtisHeartBeatCheck
+ 101              		.section	.text.getAckRx,"ax",%progbits
+ 102              		.align	2
+ 103              		.global	getAckRx
+ 104              		.code	16
+ 105              		.thumb_func
+ 106              		.type	getAckRx, %function
+ 107              	getAckRx:
+ 108              	.LFB37:
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 4
+
+
+  64:can_manga.c   **** 
+  65:can_manga.c   **** // returns 1 always... not sure whats up in the motor controller
+  66:can_manga.c   **** uint8_t getAckRx()
+  67:can_manga.c   **** {
+ 109              		.loc 1 67 0
+ 110              		.cfi_startproc
+ 111              		@ args = 0, pretend = 0, frame = 0
+ 112              		@ frame_needed = 0, uses_anonymous_args = 0
+ 113              		@ link register save eliminated.
+  68:can_manga.c   ****     return ACK_RX;
+ 114              		.loc 1 68 0
+ 115 0000 014B     		ldr	r3, .L11
+ 116 0002 D878     		ldrb	r0, [r3, #3]
+ 117 0004 C0B2     		uxtb	r0, r0
+  69:can_manga.c   **** }
+ 118              		.loc 1 69 0
+ 119              		@ sp needed
+ 120 0006 7047     		bx	lr
+ 121              	.L12:
+ 122              		.align	2
+ 123              	.L11:
+ 124 0008 00000000 		.word	.LANCHOR0
+ 125              		.cfi_endproc
+ 126              	.LFE37:
+ 127              		.size	getAckRx, .-getAckRx
+ 128              		.section	.text.getErrorTolerance,"ax",%progbits
+ 129              		.align	2
+ 130              		.global	getErrorTolerance
+ 131              		.code	16
+ 132              		.thumb_func
+ 133              		.type	getErrorTolerance, %function
+ 134              	getErrorTolerance:
+ 135              	.LFB38:
+  70:can_manga.c   **** 
+  71:can_manga.c   **** // true if break depressed more than 10%
+  72:can_manga.c   **** // this value typically used for drive request
+  73:can_manga.c   **** uint8_t getErrorTolerance()
+  74:can_manga.c   **** {
+ 136              		.loc 1 74 0
+ 137              		.cfi_startproc
+ 138              		@ args = 0, pretend = 0, frame = 0
+ 139              		@ frame_needed = 0, uses_anonymous_args = 0
+ 140              		@ link register save eliminated.
+  75:can_manga.c   ****     return ERROR_TOLERANCE;
+ 141              		.loc 1 75 0
+ 142 0000 014B     		ldr	r3, .L14
+ 143 0002 1879     		ldrb	r0, [r3, #4]
+ 144 0004 C0B2     		uxtb	r0, r0
+  76:can_manga.c   **** }
+ 145              		.loc 1 76 0
+ 146              		@ sp needed
+ 147 0006 7047     		bx	lr
+ 148              	.L15:
+ 149              		.align	2
+ 150              	.L14:
+ 151 0008 00000000 		.word	.LANCHOR0
+ 152              		.cfi_endproc
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 5
+
+
+ 153              	.LFE38:
+ 154              		.size	getErrorTolerance, .-getErrorTolerance
+ 155              		.section	.text.getABSMotorRPM,"ax",%progbits
+ 156              		.align	2
+ 157              		.global	getABSMotorRPM
+ 158              		.code	16
+ 159              		.thumb_func
+ 160              		.type	getABSMotorRPM, %function
+ 161              	getABSMotorRPM:
+ 162              	.LFB39:
+  77:can_manga.c   **** 
+  78:can_manga.c   **** // from motor controller
+  79:can_manga.c   **** // look this one up in 1239E manual, im not super sure
+  80:can_manga.c   **** uint8_t getABSMotorRPM()
+  81:can_manga.c   **** {
+ 163              		.loc 1 81 0
+ 164              		.cfi_startproc
+ 165              		@ args = 0, pretend = 0, frame = 0
+ 166              		@ frame_needed = 0, uses_anonymous_args = 0
+ 167              		@ link register save eliminated.
+  82:can_manga.c   ****     return ABS_MOTOR_RPM;
+ 168              		.loc 1 82 0
+ 169 0000 014B     		ldr	r3, .L17
+ 170 0002 5879     		ldrb	r0, [r3, #5]
+ 171 0004 C0B2     		uxtb	r0, r0
+  83:can_manga.c   **** }
+ 172              		.loc 1 83 0
+ 173              		@ sp needed
+ 174 0006 7047     		bx	lr
+ 175              	.L18:
+ 176              		.align	2
+ 177              	.L17:
+ 178 0008 00000000 		.word	.LANCHOR0
+ 179              		.cfi_endproc
+ 180              	.LFE39:
+ 181              		.size	getABSMotorRPM, .-getABSMotorRPM
+ 182              		.section	.text.getPedalLow,"ax",%progbits
+ 183              		.align	2
+ 184              		.global	getPedalLow
+ 185              		.code	16
+ 186              		.thumb_func
+ 187              		.type	getPedalLow, %function
+ 188              	getPedalLow:
+ 189              	.LFB40:
+  84:can_manga.c   **** 
+  85:can_manga.c   **** // throttle is sent in two 8 bit values to create one 16 bit value
+  86:can_manga.c   **** // hight and low refer to high and low bit sequences of the whole value
+  87:can_manga.c   **** uint8_t getPedalLow()
+  88:can_manga.c   **** {
+ 190              		.loc 1 88 0
+ 191              		.cfi_startproc
+ 192              		@ args = 0, pretend = 0, frame = 0
+ 193              		@ frame_needed = 0, uses_anonymous_args = 0
+ 194              		@ link register save eliminated.
+  89:can_manga.c   ****     return THROTTLE_LOW;
+ 195              		.loc 1 89 0
+ 196 0000 014B     		ldr	r3, .L20
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 6
+
+
+ 197 0002 9879     		ldrb	r0, [r3, #6]
+ 198 0004 C0B2     		uxtb	r0, r0
+  90:can_manga.c   **** }
+ 199              		.loc 1 90 0
+ 200              		@ sp needed
+ 201 0006 7047     		bx	lr
+ 202              	.L21:
+ 203              		.align	2
+ 204              	.L20:
+ 205 0008 00000000 		.word	.LANCHOR0
+ 206              		.cfi_endproc
+ 207              	.LFE40:
+ 208              		.size	getPedalLow, .-getPedalLow
+ 209              		.section	.text.getPedalHigh,"ax",%progbits
+ 210              		.align	2
+ 211              		.global	getPedalHigh
+ 212              		.code	16
+ 213              		.thumb_func
+ 214              		.type	getPedalHigh, %function
+ 215              	getPedalHigh:
+ 216              	.LFB41:
+  91:can_manga.c   **** 
+  92:can_manga.c   **** uint8_t getPedalHigh()
+  93:can_manga.c   **** {
+ 217              		.loc 1 93 0
+ 218              		.cfi_startproc
+ 219              		@ args = 0, pretend = 0, frame = 0
+ 220              		@ frame_needed = 0, uses_anonymous_args = 0
+ 221              		@ link register save eliminated.
+  94:can_manga.c   ****     return THROTTLE_HIGH;
+ 222              		.loc 1 94 0
+ 223 0000 014B     		ldr	r3, .L23
+ 224 0002 D879     		ldrb	r0, [r3, #7]
+ 225 0004 C0B2     		uxtb	r0, r0
+  95:can_manga.c   **** }
+ 226              		.loc 1 95 0
+ 227              		@ sp needed
+ 228 0006 7047     		bx	lr
+ 229              	.L24:
+ 230              		.align	2
+ 231              	.L23:
+ 232 0008 00000000 		.word	.LANCHOR0
+ 233              		.cfi_endproc
+ 234              	.LFE41:
+ 235              		.size	getPedalHigh, .-getPedalHigh
+ 236              		.section	.text.can_test_send,"ax",%progbits
+ 237              		.align	2
+ 238              		.global	can_test_send
+ 239              		.code	16
+ 240              		.thumb_func
+ 241              		.type	can_test_send, %function
+ 242              	can_test_send:
+ 243              	.LFB43:
+  96:can_manga.c   **** 
+  97:can_manga.c   **** // called from CAN_TX_RX_func.c in the generic RX func
+  98:can_manga.c   **** // tldr: part of an interrupt service routine
+  99:can_manga.c   **** 
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 7
+
+
+ 100:can_manga.c   **** void can_receive(uint8_t *msg, int ID)
+ 101:can_manga.c   **** {
+ 102:can_manga.c   ****     uint8 InterruptState = CyEnterCriticalSection();
+ 103:can_manga.c   ****     
+ 104:can_manga.c   ****     
+ 105:can_manga.c   ****     uint8_t data[8];
+ 106:can_manga.c   ****     int i = 0;
+ 107:can_manga.c   ****     for (i = 0; i < 8; i++)
+ 108:can_manga.c   ****         data[i] = msg[i];
+ 109:can_manga.c   ****         
+ 110:can_manga.c   ****     switch (ID) 
+ 111:can_manga.c   ****     {
+ 112:can_manga.c   ****         case 0x0566: // Curtis Status
+ 113:can_manga.c   ****             CAPACITOR_VOLT = msg[CAN_0_RX_DATA_BYTE1(ID)];
+ 114:can_manga.c   ****             ABS_MOTOR_RPM = msg[CAN_0_RX_DATA_BYTE5(ID)];
+ 115:can_manga.c   ****             break;
+ 116:can_manga.c   ****         case 0xA6:  // errors sent from MC node
+ 117:can_manga.c   ****             CURTIS_FAULT_CHECK = 0x1;
+ 118:can_manga.c   ****             break;
+ 119:can_manga.c   ****         case 0x726:     // from motor controller to confirm that node is still active
+ 120:can_manga.c   ****             CURTIS_HEART_BEAT_CHECK = 0x1;
+ 121:can_manga.c   ****             break;
+ 122:can_manga.c   ****         case 0x0666:    // pdoAwk from motor controller
+ 123:can_manga.c   ****             ACK_RX = msg[CAN_0_RX_DATA_BYTE1(ID)];
+ 124:can_manga.c   ****             break;
+ 125:can_manga.c   ****         case 0x0201:    // BSPD (brake position from pedal node)
+ 126:can_manga.c   ****             ERROR_TOLERANCE = msg[CAN_0_RX_DATA_BYTE1(ID)];
+ 127:can_manga.c   ****             break;
+ 128:can_manga.c   ****         case 0x0200:    // throttle
+ 129:can_manga.c   ****             pedalOK = 0x0;
+ 130:can_manga.c   ****             THROTTLE_HIGH = data[CAN_0_RX_DATA_BYTE2(ID)];
+ 131:can_manga.c   ****             THROTTLE_LOW = data[CAN_0_RX_DATA_BYTE3(ID)];
+ 132:can_manga.c   ****             break;
+ 133:can_manga.c   ****         case 0x388:    // BMS voltage data 
+ 134:can_manga.c   ****             VOLT_B4 = data[CAN_0_RX_DATA_BYTE5(ID)];
+ 135:can_manga.c   ****             VOLT_B3 = data[CAN_0_RX_DATA_BYTE6(ID)];
+ 136:can_manga.c   ****             VOLT_B2 = data[CAN_0_RX_DATA_BYTE7(ID)];
+ 137:can_manga.c   ****             VOLT_B1 = data[CAN_0_RX_DATA_BYTE8(ID)];
+ 138:can_manga.c   ****             voltage = (VOLT_B4 << 24) | (VOLT_B3 << 16) | (VOLT_B2 << 8) | VOLT_B1; 
+ 139:can_manga.c   ****             break;
+ 140:can_manga.c   ****         case 0x0488:   // BMS Temp data
+ 141:can_manga.c   ****             ERROR_IDX = data[CAN_0_RX_DATA_BYTE6(ID)];
+ 142:can_manga.c   ****             ERROR_NODE = data[CAN_0_RX_DATA_BYTE7(ID)];
+ 143:can_manga.c   ****             PACK_TEMP = data[CAN_0_RX_DATA_BYTE8(ID)];
+ 144:can_manga.c   ****             tempAttenuate();
+ 145:can_manga.c   ****             break;
+ 146:can_manga.c   ****         case 0x521: // current data from IVT
+ 147:can_manga.c   ****             current_bytes[0] = data[CAN_0_RX_DATA_BYTE3(ID)];
+ 148:can_manga.c   ****             current_bytes[1] = data[CAN_0_RX_DATA_BYTE4(ID)];
+ 149:can_manga.c   ****             current_bytes[2] = data[CAN_0_RX_DATA_BYTE5(ID)];
+ 150:can_manga.c   ****             current_bytes[3] = data[CAN_0_RX_DATA_BYTE6(ID)];
+ 151:can_manga.c   ****             CURRENT = (current_bytes[0] << 24) + (current_bytes[1] << 16) + (current_bytes[2] << 8)
+ 152:can_manga.c   ****             break;
+ 153:can_manga.c   ****         case 0x188:
+ 154:can_manga.c   ****             bms_status = (data[CAN_0_RX_DATA_BYTE3(ID)] << 8) | data[CAN_0_RX_DATA_BYTE4(ID)];  
+ 155:can_manga.c   ****             break;
+ 156:can_manga.c   ****     }
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 8
+
+
+ 157:can_manga.c   ****     
+ 158:can_manga.c   ****     CyExitCriticalSection(InterruptState);
+ 159:can_manga.c   **** }
+ 160:can_manga.c   **** 
+ 161:can_manga.c   **** 
+ 162:can_manga.c   **** void can_test_send()
+ 163:can_manga.c   **** {
+ 244              		.loc 1 163 0
+ 245              		.cfi_startproc
+ 246              		@ args = 0, pretend = 0, frame = 24
+ 247              		@ frame_needed = 0, uses_anonymous_args = 0
+ 248 0000 00B5     		push	{lr}
+ 249              		.cfi_def_cfa_offset 4
+ 250              		.cfi_offset 14, -4
+ 251 0002 87B0     		sub	sp, sp, #28
+ 252              		.cfi_def_cfa_offset 32
+ 164:can_manga.c   ****     //CAN_1_DATA_BYTES_MSG msg;
+ 165:can_manga.c   ****     CAN_0_TX_MSG HeartB;
+ 166:can_manga.c   ****     
+ 167:can_manga.c   ****     HeartB.id = 0x300;
+ 253              		.loc 1 167 0
+ 254 0004 C023     		movs	r3, #192
+ 255 0006 9B00     		lsls	r3, r3, #2
+ 256 0008 0293     		str	r3, [sp, #8]
+ 168:can_manga.c   ****     HeartB.rtr = 0;
+ 257              		.loc 1 168 0
+ 258 000a 0022     		movs	r2, #0
+ 259 000c 02AB     		add	r3, sp, #8
+ 260 000e 1A71     		strb	r2, [r3, #4]
+ 169:can_manga.c   ****     HeartB.ide = 0;
+ 261              		.loc 1 169 0
+ 262 0010 5A71     		strb	r2, [r3, #5]
+ 170:can_manga.c   ****     HeartB.dlc = 1;
+ 263              		.loc 1 170 0
+ 264 0012 0123     		movs	r3, #1
+ 265 0014 02A9     		add	r1, sp, #8
+ 266 0016 8B71     		strb	r3, [r1, #6]
+ 171:can_manga.c   ****     
+ 172:can_manga.c   ****     HeartB.irq = 0;
+ 267              		.loc 1 172 0
+ 268 0018 CA71     		strb	r2, [r1, #7]
+ 173:can_manga.c   ****     
+ 174:can_manga.c   ****     HeartB.msg->byte[0] = (uint8) 1;
+ 269              		.loc 1 174 0
+ 270 001a 059A     		ldr	r2, [sp, #20]
+ 271 001c 1370     		strb	r3, [r2]
+ 175:can_manga.c   ****     HeartB.msg->byte[1] = (uint8) 1;
+ 272              		.loc 1 175 0
+ 273 001e 059A     		ldr	r2, [sp, #20]
+ 274 0020 5370     		strb	r3, [r2, #1]
+ 176:can_manga.c   ****     HeartB.msg->byte[2] = (uint8) 1;
+ 275              		.loc 1 176 0
+ 276 0022 059A     		ldr	r2, [sp, #20]
+ 277 0024 9370     		strb	r3, [r2, #2]
+ 177:can_manga.c   ****     HeartB.msg->byte[3] = (uint8) 1;
+ 278              		.loc 1 177 0
+ 279 0026 059A     		ldr	r2, [sp, #20]
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 9
+
+
+ 280 0028 D370     		strb	r3, [r2, #3]
+ 178:can_manga.c   ****     HeartB.msg->byte[4] = (uint8) 1;
+ 281              		.loc 1 178 0
+ 282 002a 059A     		ldr	r2, [sp, #20]
+ 283 002c 1371     		strb	r3, [r2, #4]
+ 179:can_manga.c   ****     HeartB.msg->byte[5] = (uint8) 1;
+ 284              		.loc 1 179 0
+ 285 002e 059A     		ldr	r2, [sp, #20]
+ 286 0030 5371     		strb	r3, [r2, #5]
+ 180:can_manga.c   ****     HeartB.msg->byte[6] = (uint8) 1;
+ 287              		.loc 1 180 0
+ 288 0032 059A     		ldr	r2, [sp, #20]
+ 289 0034 9371     		strb	r3, [r2, #6]
+ 181:can_manga.c   ****     HeartB.msg->byte[7] = (uint8) 1;
+ 290              		.loc 1 181 0
+ 291 0036 059A     		ldr	r2, [sp, #20]
+ 292 0038 0192     		str	r2, [sp, #4]
+ 293 003a D371     		strb	r3, [r2, #7]
+ 182:can_manga.c   ****     
+ 183:can_manga.c   ****     CAN_0_SendMsg(&HeartB);
+ 294              		.loc 1 183 0
+ 295 003c 0800     		movs	r0, r1
+ 296 003e FFF7FEFF 		bl	CAN_0_SendMsg
+ 297              	.LVL0:
+ 184:can_manga.c   **** }
+ 298              		.loc 1 184 0
+ 299 0042 07B0     		add	sp, sp, #28
+ 300              		@ sp needed
+ 301 0044 00BD     		pop	{pc}
+ 302              		.cfi_endproc
+ 303              	.LFE43:
+ 304              		.size	can_test_send, .-can_test_send
+ 305 0046 C046     		.section	.text.can_send,"ax",%progbits
+ 306              		.align	2
+ 307              		.global	can_send
+ 308              		.code	16
+ 309              		.thumb_func
+ 310              		.type	can_send, %function
+ 311              	can_send:
+ 312              	.LFB44:
+ 185:can_manga.c   **** 
+ 186:can_manga.c   **** void can_send(uint8_t data[8], uint32_t ID)
+ 187:can_manga.c   **** {
+ 313              		.loc 1 187 0
+ 314              		.cfi_startproc
+ 315              		@ args = 0, pretend = 0, frame = 24
+ 316              		@ frame_needed = 0, uses_anonymous_args = 0
+ 317              	.LVL1:
+ 318 0000 00B5     		push	{lr}
+ 319              		.cfi_def_cfa_offset 4
+ 320              		.cfi_offset 14, -4
+ 321 0002 87B0     		sub	sp, sp, #28
+ 322              		.cfi_def_cfa_offset 32
+ 188:can_manga.c   ****     uint8_t i;
+ 189:can_manga.c   **** 	CAN_0_TX_MSG message;
+ 190:can_manga.c   **** 	CAN_0_DATA_BYTES_MSG payload;
+ 191:can_manga.c   **** 	message.id = ID; 
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 10
+
+
+ 323              		.loc 1 191 0
+ 324 0004 02AB     		add	r3, sp, #8
+ 325 0006 0291     		str	r1, [sp, #8]
+ 192:can_manga.c   **** 	message.rtr = 0;
+ 326              		.loc 1 192 0
+ 327 0008 0022     		movs	r2, #0
+ 328 000a 1A71     		strb	r2, [r3, #4]
+ 193:can_manga.c   **** 	message.ide = 0;
+ 329              		.loc 1 193 0
+ 330 000c 5A71     		strb	r2, [r3, #5]
+ 194:can_manga.c   **** 	message.dlc = 0x08;
+ 331              		.loc 1 194 0
+ 332 000e 0821     		movs	r1, #8
+ 333              	.LVL2:
+ 334 0010 9971     		strb	r1, [r3, #6]
+ 195:can_manga.c   **** 	message.irq = 0;
+ 335              		.loc 1 195 0
+ 336 0012 DA71     		strb	r2, [r3, #7]
+ 196:can_manga.c   **** 	message.msg = &payload;
+ 337              		.loc 1 196 0
+ 338 0014 6A46     		mov	r2, sp
+ 339 0016 0592     		str	r2, [sp, #20]
+ 340              	.LVL3:
+ 197:can_manga.c   **** 	for(i=0;i<8;i++)
+ 341              		.loc 1 197 0
+ 342 0018 0023     		movs	r3, #0
+ 343              	.LVL4:
+ 344 001a 04E0     		b	.L27
+ 345              	.LVL5:
+ 346              	.L28:
+ 198:can_manga.c   **** 		payload.byte[i] = data[i];
+ 347              		.loc 1 198 0 discriminator 3
+ 348 001c C25C     		ldrb	r2, [r0, r3]
+ 349 001e 6946     		mov	r1, sp
+ 350 0020 CA54     		strb	r2, [r1, r3]
+ 197:can_manga.c   **** 	for(i=0;i<8;i++)
+ 351              		.loc 1 197 0 discriminator 3
+ 352 0022 0133     		adds	r3, r3, #1
+ 353              	.LVL6:
+ 354 0024 DBB2     		uxtb	r3, r3
+ 355              	.LVL7:
+ 356              	.L27:
+ 197:can_manga.c   **** 	for(i=0;i<8;i++)
+ 357              		.loc 1 197 0 is_stmt 0 discriminator 1
+ 358 0026 072B     		cmp	r3, #7
+ 359 0028 F8D9     		bls	.L28
+ 199:can_manga.c   **** 	CAN_0_SendMsg(&message); 
+ 360              		.loc 1 199 0 is_stmt 1
+ 361 002a 02A8     		add	r0, sp, #8
+ 362              	.LVL8:
+ 363 002c FFF7FEFF 		bl	CAN_0_SendMsg
+ 364              	.LVL9:
+ 200:can_manga.c   **** }
+ 365              		.loc 1 200 0
+ 366 0030 07B0     		add	sp, sp, #28
+ 367              		@ sp needed
+ 368 0032 00BD     		pop	{pc}
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 11
+
+
+ 369              		.cfi_endproc
+ 370              	.LFE44:
+ 371              		.size	can_send, .-can_send
+ 372              		.section	.text.can_send_status,"ax",%progbits
+ 373              		.align	2
+ 374              		.global	can_send_status
+ 375              		.code	16
+ 376              		.thumb_func
+ 377              		.type	can_send_status, %function
+ 378              	can_send_status:
+ 379              	.LFB45:
+ 201:can_manga.c   **** 
+ 202:can_manga.c   **** void can_send_status(
+ 203:can_manga.c   ****     uint8_t state,
+ 204:can_manga.c   ****     uint8_t errorState)
+ 205:can_manga.c   **** {
+ 380              		.loc 1 205 0
+ 381              		.cfi_startproc
+ 382              		@ args = 0, pretend = 0, frame = 8
+ 383              		@ frame_needed = 0, uses_anonymous_args = 0
+ 384              	.LVL10:
+ 385 0000 00B5     		push	{lr}
+ 386              		.cfi_def_cfa_offset 4
+ 387              		.cfi_offset 14, -4
+ 388 0002 83B0     		sub	sp, sp, #12
+ 389              		.cfi_def_cfa_offset 16
+ 206:can_manga.c   ****     //max and min voltage means the voltage of single cell
+ 207:can_manga.c   ****         uint8_t data[8];
+ 208:can_manga.c   ****         
+ 209:can_manga.c   ****         data[0] = state;
+ 390              		.loc 1 209 0
+ 391 0004 6B46     		mov	r3, sp
+ 392 0006 1870     		strb	r0, [r3]
+ 210:can_manga.c   ****         data[1] = errorState;
+ 393              		.loc 1 210 0
+ 394 0008 5970     		strb	r1, [r3, #1]
+ 211:can_manga.c   ****         
+ 212:can_manga.c   ****         data[2] = 0;
+ 395              		.loc 1 212 0
+ 396 000a 0023     		movs	r3, #0
+ 397 000c 6A46     		mov	r2, sp
+ 398 000e 9370     		strb	r3, [r2, #2]
+ 213:can_manga.c   ****         data[3] = 0;
+ 399              		.loc 1 213 0
+ 400 0010 D370     		strb	r3, [r2, #3]
+ 214:can_manga.c   ****         
+ 215:can_manga.c   ****         data[4] = 0;
+ 401              		.loc 1 215 0
+ 402 0012 1371     		strb	r3, [r2, #4]
+ 216:can_manga.c   ****         data[5] = 0;
+ 403              		.loc 1 216 0
+ 404 0014 5371     		strb	r3, [r2, #5]
+ 217:can_manga.c   ****         data[6] = 0;
+ 405              		.loc 1 217 0
+ 406 0016 9371     		strb	r3, [r2, #6]
+ 218:can_manga.c   ****         data[7] = 0;
+ 407              		.loc 1 218 0
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 12
+
+
+ 408 0018 D371     		strb	r3, [r2, #7]
+ 219:can_manga.c   **** 
+ 220:can_manga.c   ****         can_send(data, 0x626);
+ 409              		.loc 1 220 0
+ 410 001a 0349     		ldr	r1, .L30
+ 411              	.LVL11:
+ 412 001c 6846     		mov	r0, sp
+ 413              	.LVL12:
+ 414 001e FFF7FEFF 		bl	can_send
+ 415              	.LVL13:
+ 221:can_manga.c   **** 
+ 222:can_manga.c   ****         
+ 223:can_manga.c   **** } // can_send_status()
+ 416              		.loc 1 223 0
+ 417 0022 03B0     		add	sp, sp, #12
+ 418              		@ sp needed
+ 419 0024 00BD     		pop	{pc}
+ 420              	.L31:
+ 421 0026 C046     		.align	2
+ 422              	.L30:
+ 423 0028 26060000 		.word	1574
+ 424              		.cfi_endproc
+ 425              	.LFE45:
+ 426              		.size	can_send_status, .-can_send_status
+ 427              		.section	.text.can_send_cmd,"ax",%progbits
+ 428              		.align	2
+ 429              		.global	can_send_cmd
+ 430              		.code	16
+ 431              		.thumb_func
+ 432              		.type	can_send_cmd, %function
+ 433              	can_send_cmd:
+ 434              	.LFB46:
+ 224:can_manga.c   **** 
+ 225:can_manga.c   **** void can_send_cmd(
+ 226:can_manga.c   ****     uint8_t SetInterlock,
+ 227:can_manga.c   ****     uint16_t VCL_Throttle_High,
+ 228:can_manga.c   ****     uint16_t VCL_Throttle_Low
+ 229:can_manga.c   **** )
+ 230:can_manga.c   **** {
+ 435              		.loc 1 230 0
+ 436              		.cfi_startproc
+ 437              		@ args = 0, pretend = 0, frame = 8
+ 438              		@ frame_needed = 0, uses_anonymous_args = 0
+ 439              	.LVL14:
+ 440 0000 00B5     		push	{lr}
+ 441              		.cfi_def_cfa_offset 4
+ 442              		.cfi_offset 14, -4
+ 443 0002 83B0     		sub	sp, sp, #12
+ 444              		.cfi_def_cfa_offset 16
+ 231:can_manga.c   ****     //max and min voltage means the voltage of single cell
+ 232:can_manga.c   ****         
+ 233:can_manga.c   ****         uint8_t data[8];
+ 234:can_manga.c   ****         
+ 235:can_manga.c   ****         data[0] = SetInterlock;
+ 445              		.loc 1 235 0
+ 446 0004 6B46     		mov	r3, sp
+ 447 0006 1870     		strb	r0, [r3]
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 13
+
+
+ 236:can_manga.c   ****         
+ 237:can_manga.c   ****         data[1] = VCL_Throttle_High;
+ 448              		.loc 1 237 0
+ 449 0008 5970     		strb	r1, [r3, #1]
+ 238:can_manga.c   ****         data[2] = VCL_Throttle_Low;
+ 450              		.loc 1 238 0
+ 451 000a 9A70     		strb	r2, [r3, #2]
+ 239:can_manga.c   ****         
+ 240:can_manga.c   ****         data[3] = 0;
+ 452              		.loc 1 240 0
+ 453 000c 0023     		movs	r3, #0
+ 454 000e 6A46     		mov	r2, sp
+ 455              	.LVL15:
+ 456 0010 D370     		strb	r3, [r2, #3]
+ 241:can_manga.c   ****         data[4] = 0;
+ 457              		.loc 1 241 0
+ 458 0012 1371     		strb	r3, [r2, #4]
+ 242:can_manga.c   ****         
+ 243:can_manga.c   ****         data[5] = 0;
+ 459              		.loc 1 243 0
+ 460 0014 5371     		strb	r3, [r2, #5]
+ 244:can_manga.c   ****         data[6] = 0;
+ 461              		.loc 1 244 0
+ 462 0016 9371     		strb	r3, [r2, #6]
+ 245:can_manga.c   ****         data[7] = 0;
+ 463              		.loc 1 245 0
+ 464 0018 D371     		strb	r3, [r2, #7]
+ 246:can_manga.c   **** 
+ 247:can_manga.c   ****         can_send(data, 0x766);
+ 465              		.loc 1 247 0
+ 466 001a 0449     		ldr	r1, .L33
+ 467              	.LVL16:
+ 468 001c 6846     		mov	r0, sp
+ 469              	.LVL17:
+ 470 001e FFF7FEFF 		bl	can_send
+ 471              	.LVL18:
+ 248:can_manga.c   ****         CyDelay(1); // Wtf is this shit?
+ 472              		.loc 1 248 0
+ 473 0022 0120     		movs	r0, #1
+ 474 0024 FFF7FEFF 		bl	CyDelay
+ 475              	.LVL19:
+ 249:can_manga.c   **** 
+ 250:can_manga.c   **** } // can_send_cmd()
+ 476              		.loc 1 250 0
+ 477 0028 03B0     		add	sp, sp, #12
+ 478              		@ sp needed
+ 479 002a 00BD     		pop	{pc}
+ 480              	.L34:
+ 481              		.align	2
+ 482              	.L33:
+ 483 002c 66070000 		.word	1894
+ 484              		.cfi_endproc
+ 485              	.LFE46:
+ 486              		.size	can_send_cmd, .-can_send_cmd
+ 487              		.section	.text.can_send_charge,"ax",%progbits
+ 488              		.align	2
+ 489              		.global	can_send_charge
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 14
+
+
+ 490              		.code	16
+ 491              		.thumb_func
+ 492              		.type	can_send_charge, %function
+ 493              	can_send_charge:
+ 494              	.LFB47:
+ 251:can_manga.c   **** 
+ 252:can_manga.c   **** void can_send_charge(uint8_t charge, uint8_t save_soc) {
+ 495              		.loc 1 252 0
+ 496              		.cfi_startproc
+ 497              		@ args = 0, pretend = 0, frame = 8
+ 498              		@ frame_needed = 0, uses_anonymous_args = 0
+ 499              	.LVL20:
+ 500 0000 30B5     		push	{r4, r5, lr}
+ 501              		.cfi_def_cfa_offset 12
+ 502              		.cfi_offset 4, -12
+ 503              		.cfi_offset 5, -8
+ 504              		.cfi_offset 14, -4
+ 505 0002 83B0     		sub	sp, sp, #12
+ 506              		.cfi_def_cfa_offset 24
+ 507 0004 0500     		movs	r5, r0
+ 508 0006 0C00     		movs	r4, r1
+ 253:can_manga.c   ****     uint8_t data[8] = {0};
+ 509              		.loc 1 253 0
+ 510 0008 0822     		movs	r2, #8
+ 511 000a 0021     		movs	r1, #0
+ 512              	.LVL21:
+ 513 000c 6846     		mov	r0, sp
+ 514              	.LVL22:
+ 515 000e FFF7FEFF 		bl	memset
+ 516              	.LVL23:
+ 254:can_manga.c   ****     data[0] = charge;
+ 517              		.loc 1 254 0
+ 518 0012 6B46     		mov	r3, sp
+ 519 0014 1D70     		strb	r5, [r3]
+ 255:can_manga.c   ****     data[1] = save_soc;
+ 520              		.loc 1 255 0
+ 521 0016 5C70     		strb	r4, [r3, #1]
+ 256:can_manga.c   ****     
+ 257:can_manga.c   ****     can_send(data, 0x389);
+ 522              		.loc 1 257 0
+ 523 0018 0249     		ldr	r1, .L36
+ 524 001a 6846     		mov	r0, sp
+ 525 001c FFF7FEFF 		bl	can_send
+ 526              	.LVL24:
+ 258:can_manga.c   **** }
+ 527              		.loc 1 258 0
+ 528 0020 03B0     		add	sp, sp, #12
+ 529              		@ sp needed
+ 530 0022 30BD     		pop	{r4, r5, pc}
+ 531              	.L37:
+ 532              		.align	2
+ 533              	.L36:
+ 534 0024 89030000 		.word	905
+ 535              		.cfi_endproc
+ 536              	.LFE47:
+ 537              		.size	can_send_charge, .-can_send_charge
+ 538              		.global	__aeabi_ddiv
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 15
+
+
+ 539              		.section	.text.tempAttenuate,"ax",%progbits
+ 540              		.align	2
+ 541              		.global	tempAttenuate
+ 542              		.code	16
+ 543              		.thumb_func
+ 544              		.type	tempAttenuate, %function
+ 545              	tempAttenuate:
+ 546              	.LFB48:
+ 259:can_manga.c   **** 
+ 260:can_manga.c   **** void tempAttenuate() {
+ 547              		.loc 1 260 0
+ 548              		.cfi_startproc
+ 549              		@ args = 0, pretend = 0, frame = 0
+ 550              		@ frame_needed = 0, uses_anonymous_args = 0
+ 551 0000 10B5     		push	{r4, lr}
+ 552              		.cfi_def_cfa_offset 8
+ 553              		.cfi_offset 4, -8
+ 554              		.cfi_offset 14, -4
+ 261:can_manga.c   ****     int t = PACK_TEMP - 50;
+ 555              		.loc 1 261 0
+ 556 0002 134B     		ldr	r3, .L42
+ 557 0004 1B78     		ldrb	r3, [r3]
+ 558              	.LVL25:
+ 262:can_manga.c   ****     if (t < 0) {
+ 559              		.loc 1 262 0
+ 560 0006 323B     		subs	r3, r3, #50
+ 561 0008 05D5     		bpl	.L39
+ 562              	.LVL26:
+ 263:can_manga.c   ****         THROTTLE_MULTIPLIER = 1;   
+ 563              		.loc 1 263 0
+ 564 000a 0020     		movs	r0, #0
+ 565 000c 1149     		ldr	r1, .L42+4
+ 566 000e 124B     		ldr	r3, .L42+8
+ 567              	.LVL27:
+ 568 0010 1860     		str	r0, [r3]
+ 569 0012 5960     		str	r1, [r3, #4]
+ 570 0014 1AE0     		b	.L38
+ 571              	.LVL28:
+ 572              	.L39:
+ 264:can_manga.c   ****     } else if (t < 8) {
+ 573              		.loc 1 264 0
+ 574 0016 072B     		cmp	r3, #7
+ 575 0018 0CDC     		bgt	.L41
+ 265:can_manga.c   ****         THROTTLE_MULTIPLIER = THROTTLE_MAP[t] / 100.0; 
+ 576              		.loc 1 265 0
+ 577 001a DB00     		lsls	r3, r3, #3
+ 578              	.LVL29:
+ 579 001c 0F4A     		ldr	r2, .L42+12
+ 580 001e D318     		adds	r3, r2, r3
+ 581 0020 1868     		ldr	r0, [r3]
+ 582 0022 5968     		ldr	r1, [r3, #4]
+ 583 0024 0022     		movs	r2, #0
+ 584 0026 0E4B     		ldr	r3, .L42+16
+ 585 0028 FFF7FEFF 		bl	__aeabi_ddiv
+ 586              	.LVL30:
+ 587 002c 0A4B     		ldr	r3, .L42+8
+ 588 002e 1860     		str	r0, [r3]
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 16
+
+
+ 589 0030 5960     		str	r1, [r3, #4]
+ 590 0032 0BE0     		b	.L38
+ 591              	.LVL31:
+ 592              	.L41:
+ 266:can_manga.c   ****     } else if (t >= 8) {
+ 593              		.loc 1 266 0
+ 594 0034 072B     		cmp	r3, #7
+ 595 0036 09DD     		ble	.L38
+ 267:can_manga.c   ****         THROTTLE_MULTIPLIER = THROTTLE_MAP[7] / 100.0; 
+ 596              		.loc 1 267 0
+ 597 0038 084B     		ldr	r3, .L42+12
+ 598              	.LVL32:
+ 599 003a 986B     		ldr	r0, [r3, #56]
+ 600 003c D96B     		ldr	r1, [r3, #60]
+ 601 003e 0022     		movs	r2, #0
+ 602 0040 074B     		ldr	r3, .L42+16
+ 603 0042 FFF7FEFF 		bl	__aeabi_ddiv
+ 604              	.LVL33:
+ 605 0046 044B     		ldr	r3, .L42+8
+ 606 0048 1860     		str	r0, [r3]
+ 607 004a 5960     		str	r1, [r3, #4]
+ 608              	.L38:
+ 268:can_manga.c   ****     }
+ 269:can_manga.c   **** }...
+ 609              		.loc 1 269 0
+ 610              		@ sp needed
+ 611 004c 10BD     		pop	{r4, pc}
+ 612              	.L43:
+ 613 004e C046     		.align	2
+ 614              	.L42:
+ 615 0050 00000000 		.word	PACK_TEMP
+ 616 0054 0000F03F 		.word	1072693248
+ 617 0058 00000000 		.word	THROTTLE_MULTIPLIER
+ 618 005c 00000000 		.word	THROTTLE_MAP
+ 619 0060 00005940 		.word	1079574528
+ 620              		.cfi_endproc
+ 621              	.LFE48:
+ 622              		.size	tempAttenuate, .-tempAttenuate
+ 623              		.section	.text.can_receive,"ax",%progbits
+ 624              		.align	2
+ 625              		.global	can_receive
+ 626              		.code	16
+ 627              		.thumb_func
+ 628              		.type	can_receive, %function
+ 629              	can_receive:
+ 630              	.LFB42:
+ 101:can_manga.c   **** {
+ 631              		.loc 1 101 0
+ 632              		.cfi_startproc
+ 633              		@ args = 0, pretend = 0, frame = 8
+ 634              		@ frame_needed = 0, uses_anonymous_args = 0
+ 635              	.LVL34:
+ 636 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 637              		.cfi_def_cfa_offset 20
+ 638              		.cfi_offset 4, -20
+ 639              		.cfi_offset 5, -16
+ 640              		.cfi_offset 6, -12
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 17
+
+
+ 641              		.cfi_offset 7, -8
+ 642              		.cfi_offset 14, -4
+ 643 0002 83B0     		sub	sp, sp, #12
+ 644              		.cfi_def_cfa_offset 32
+ 645 0004 0600     		movs	r6, r0
+ 646 0006 0C00     		movs	r4, r1
+ 102:can_manga.c   ****     uint8 InterruptState = CyEnterCriticalSection();
+ 647              		.loc 1 102 0
+ 648 0008 FFF7FEFF 		bl	CyEnterCriticalSection
+ 649              	.LVL35:
+ 650 000c 0500     		movs	r5, r0
+ 651              	.LVL36:
+ 107:can_manga.c   ****     for (i = 0; i < 8; i++)
+ 652              		.loc 1 107 0
+ 653 000e 0023     		movs	r3, #0
+ 654 0010 03E0     		b	.L45
+ 655              	.LVL37:
+ 656              	.L46:
+ 108:can_manga.c   ****         data[i] = msg[i];
+ 657              		.loc 1 108 0 discriminator 3
+ 658 0012 F25C     		ldrb	r2, [r6, r3]
+ 659 0014 6946     		mov	r1, sp
+ 660 0016 CA54     		strb	r2, [r1, r3]
+ 107:can_manga.c   ****     for (i = 0; i < 8; i++)
+ 661              		.loc 1 107 0 discriminator 3
+ 662 0018 0133     		adds	r3, r3, #1
+ 663              	.LVL38:
+ 664              	.L45:
+ 107:can_manga.c   ****     for (i = 0; i < 8; i++)
+ 665              		.loc 1 107 0 is_stmt 0 discriminator 1
+ 666 001a 072B     		cmp	r3, #7
+ 667 001c F9DD     		ble	.L46
+ 110:can_manga.c   ****     switch (ID) 
+ 668              		.loc 1 110 0 is_stmt 1
+ 669 001e E223     		movs	r3, #226
+ 670              	.LVL39:
+ 671 0020 9B00     		lsls	r3, r3, #2
+ 672 0022 9C42     		cmp	r4, r3
+ 673 0024 66D0     		beq	.L48
+ 674 0026 10DC     		bgt	.L49
+ 675 0028 C423     		movs	r3, #196
+ 676 002a 5B00     		lsls	r3, r3, #1
+ 677 002c 9C42     		cmp	r4, r3
+ 678 002e 00D1     		bne	.LCB531
+ 679 0030 CCE0     		b	.L50	@long jump
+ 680              	.LCB531:
+ 681 0032 02DC     		bgt	.L51
+ 682 0034 A62C     		cmp	r4, #166
+ 683 0036 2BD0     		beq	.L52
+ 684 0038 DAE0     		b	.L47
+ 685              	.L51:
+ 686 003a 8023     		movs	r3, #128
+ 687 003c 9B00     		lsls	r3, r3, #2
+ 688 003e 9C42     		cmp	r4, r3
+ 689 0040 42D0     		beq	.L53
+ 690 0042 6E4B     		ldr	r3, .L61
+ 691 0044 9C42     		cmp	r4, r3
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 18
+
+
+ 692 0046 35D0     		beq	.L54
+ 693 0048 D2E0     		b	.L47
+ 694              	.L49:
+ 695 004a 6D4B     		ldr	r3, .L61+4
+ 696 004c 9C42     		cmp	r4, r3
+ 697 004e 0FD0     		beq	.L55
+ 698 0050 07DC     		bgt	.L56
+ 699 0052 DE3B     		subs	r3, r3, #222
+ 700 0054 9C42     		cmp	r4, r3
+ 701 0056 78D0     		beq	.L57
+ 702 0058 6A4B     		ldr	r3, .L61+8
+ 703 005a 9C42     		cmp	r4, r3
+ 704 005c 00D1     		bne	.LCB561
+ 705 005e 90E0     		b	.L58	@long jump
+ 706              	.LCB561:
+ 707 0060 C6E0     		b	.L47
+ 708              	.L56:
+ 709 0062 694B     		ldr	r3, .L61+12
+ 710 0064 9C42     		cmp	r4, r3
+ 711 0066 1BD0     		beq	.L59
+ 712 0068 684B     		ldr	r3, .L61+16
+ 713 006a 9C42     		cmp	r4, r3
+ 714 006c 14D0     		beq	.L60
+ 715 006e BFE0     		b	.L47
+ 716              	.L55:
+ 113:can_manga.c   ****             CAPACITOR_VOLT = msg[CAN_0_RX_DATA_BYTE1(ID)];
+ 717              		.loc 1 113 0
+ 718 0070 6401     		lsls	r4, r4, #5
+ 719              	.LVL40:
+ 720 0072 674B     		ldr	r3, .L61+20
+ 721 0074 E318     		adds	r3, r4, r3
+ 722 0076 9B68     		ldr	r3, [r3, #8]
+ 723 0078 1B0E     		lsrs	r3, r3, #24
+ 724 007a F35C     		ldrb	r3, [r6, r3]
+ 725 007c 654A     		ldr	r2, .L61+24
+ 726 007e 1370     		strb	r3, [r2]
+ 114:can_manga.c   ****             ABS_MOTOR_RPM = msg[CAN_0_RX_DATA_BYTE5(ID)];
+ 727              		.loc 1 114 0
+ 728 0080 654B     		ldr	r3, .L61+28
+ 729 0082 9C46     		mov	ip, r3
+ 730 0084 6444     		add	r4, r4, ip
+ 731 0086 2368     		ldr	r3, [r4]
+ 732 0088 1B0E     		lsrs	r3, r3, #24
+ 733 008a F35C     		ldrb	r3, [r6, r3]
+ 734 008c 5371     		strb	r3, [r2, #5]
+ 115:can_manga.c   ****             break;
+ 735              		.loc 1 115 0
+ 736 008e AFE0     		b	.L47
+ 737              	.LVL41:
+ 738              	.L52:
+ 117:can_manga.c   ****             CURTIS_FAULT_CHECK = 0x1;
+ 739              		.loc 1 117 0
+ 740 0090 0122     		movs	r2, #1
+ 741 0092 604B     		ldr	r3, .L61+24
+ 742 0094 5A70     		strb	r2, [r3, #1]
+ 118:can_manga.c   ****             break;
+ 743              		.loc 1 118 0
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 19
+
+
+ 744 0096 ABE0     		b	.L47
+ 745              	.L60:
+ 120:can_manga.c   ****             CURTIS_HEART_BEAT_CHECK = 0x1;
+ 746              		.loc 1 120 0
+ 747 0098 0122     		movs	r2, #1
+ 748 009a 5E4B     		ldr	r3, .L61+24
+ 749 009c 9A70     		strb	r2, [r3, #2]
+ 121:can_manga.c   ****             break;
+ 750              		.loc 1 121 0
+ 751 009e A7E0     		b	.L47
+ 752              	.L59:
+ 123:can_manga.c   ****             ACK_RX = msg[CAN_0_RX_DATA_BYTE1(ID)];
+ 753              		.loc 1 123 0
+ 754 00a0 6401     		lsls	r4, r4, #5
+ 755              	.LVL42:
+ 756 00a2 5B4B     		ldr	r3, .L61+20
+ 757 00a4 9C46     		mov	ip, r3
+ 758 00a6 6444     		add	r4, r4, ip
+ 759 00a8 A368     		ldr	r3, [r4, #8]
+ 760 00aa 1B0E     		lsrs	r3, r3, #24
+ 761 00ac F25C     		ldrb	r2, [r6, r3]
+ 762 00ae 594B     		ldr	r3, .L61+24
+ 763 00b0 DA70     		strb	r2, [r3, #3]
+ 124:can_manga.c   ****             break;
+ 764              		.loc 1 124 0
+ 765 00b2 9DE0     		b	.L47
+ 766              	.LVL43:
+ 767              	.L54:
+ 126:can_manga.c   ****             ERROR_TOLERANCE = msg[CAN_0_RX_DATA_BYTE1(ID)];
+ 768              		.loc 1 126 0
+ 769 00b4 6401     		lsls	r4, r4, #5
+ 770              	.LVL44:
+ 771 00b6 564B     		ldr	r3, .L61+20
+ 772 00b8 9C46     		mov	ip, r3
+ 773 00ba 6444     		add	r4, r4, ip
+ 774 00bc A368     		ldr	r3, [r4, #8]
+ 775 00be 1B0E     		lsrs	r3, r3, #24
+ 776 00c0 F25C     		ldrb	r2, [r6, r3]
+ 777 00c2 544B     		ldr	r3, .L61+24
+ 778 00c4 1A71     		strb	r2, [r3, #4]
+ 127:can_manga.c   ****             break;
+ 779              		.loc 1 127 0
+ 780 00c6 93E0     		b	.L47
+ 781              	.LVL45:
+ 782              	.L53:
+ 129:can_manga.c   ****             pedalOK = 0x0;
+ 783              		.loc 1 129 0
+ 784 00c8 0022     		movs	r2, #0
+ 785 00ca 544B     		ldr	r3, .L61+32
+ 786 00cc 1A60     		str	r2, [r3]
+ 130:can_manga.c   ****             THROTTLE_HIGH = data[CAN_0_RX_DATA_BYTE2(ID)];
+ 787              		.loc 1 130 0
+ 788 00ce 6401     		lsls	r4, r4, #5
+ 789              	.LVL46:
+ 790 00d0 4F4B     		ldr	r3, .L61+20
+ 791 00d2 9C46     		mov	ip, r3
+ 792 00d4 6444     		add	r4, r4, ip
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 20
+
+
+ 793 00d6 A268     		ldr	r2, [r4, #8]
+ 794 00d8 120C     		lsrs	r2, r2, #16
+ 795 00da FF21     		movs	r1, #255
+ 796 00dc 0A40     		ands	r2, r1
+ 797 00de 6B46     		mov	r3, sp
+ 798 00e0 9B5C     		ldrb	r3, [r3, r2]
+ 799 00e2 4C4A     		ldr	r2, .L61+24
+ 800 00e4 D371     		strb	r3, [r2, #7]
+ 131:can_manga.c   ****             THROTTLE_LOW = data[CAN_0_RX_DATA_BYTE3(ID)];
+ 801              		.loc 1 131 0
+ 802 00e6 A368     		ldr	r3, [r4, #8]
+ 803 00e8 1B0A     		lsrs	r3, r3, #8
+ 804 00ea 0B40     		ands	r3, r1
+ 805 00ec 6946     		mov	r1, sp
+ 806 00ee CB5C     		ldrb	r3, [r1, r3]
+ 807 00f0 9371     		strb	r3, [r2, #6]
+ 132:can_manga.c   ****             break;
+ 808              		.loc 1 132 0
+ 809 00f2 7DE0     		b	.L47
+ 810              	.LVL47:
+ 811              	.L48:
+ 134:can_manga.c   ****             VOLT_B4 = data[CAN_0_RX_DATA_BYTE5(ID)];
+ 812              		.loc 1 134 0
+ 813 00f4 6401     		lsls	r4, r4, #5
+ 814              	.LVL48:
+ 815 00f6 484B     		ldr	r3, .L61+28
+ 816 00f8 9C46     		mov	ip, r3
+ 817 00fa 6444     		add	r4, r4, ip
+ 818 00fc 2368     		ldr	r3, [r4]
+ 819 00fe 1B0E     		lsrs	r3, r3, #24
+ 820 0100 6A46     		mov	r2, sp
+ 821 0102 D35C     		ldrb	r3, [r2, r3]
+ 822 0104 4648     		ldr	r0, .L61+36
+ 823 0106 0370     		strb	r3, [r0]
+ 135:can_manga.c   ****             VOLT_B3 = data[CAN_0_RX_DATA_BYTE6(ID)];
+ 824              		.loc 1 135 0
+ 825 0108 2368     		ldr	r3, [r4]
+ 826 010a 1B0C     		lsrs	r3, r3, #16
+ 827 010c FF22     		movs	r2, #255
+ 828 010e 1340     		ands	r3, r2
+ 829 0110 6946     		mov	r1, sp
+ 830 0112 CB5C     		ldrb	r3, [r1, r3]
+ 831 0114 434E     		ldr	r6, .L61+40
+ 832              	.LVL49:
+ 833 0116 3370     		strb	r3, [r6]
+ 136:can_manga.c   ****             VOLT_B2 = data[CAN_0_RX_DATA_BYTE7(ID)];
+ 834              		.loc 1 136 0
+ 835 0118 2368     		ldr	r3, [r4]
+ 836 011a 1B0A     		lsrs	r3, r3, #8
+ 837 011c 1340     		ands	r3, r2
+ 838 011e CB5C     		ldrb	r3, [r1, r3]
+ 839 0120 4149     		ldr	r1, .L61+44
+ 840 0122 0B70     		strb	r3, [r1]
+ 137:can_manga.c   ****             VOLT_B1 = data[CAN_0_RX_DATA_BYTE8(ID)];
+ 841              		.loc 1 137 0
+ 842 0124 2368     		ldr	r3, [r4]
+ 843 0126 1340     		ands	r3, r2
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 21
+
+
+ 844 0128 6A46     		mov	r2, sp
+ 845 012a D35C     		ldrb	r3, [r2, r3]
+ 846 012c 3F4C     		ldr	r4, .L61+48
+ 847 012e 2370     		strb	r3, [r4]
+ 138:can_manga.c   ****             voltage = (VOLT_B4 << 24) | (VOLT_B3 << 16) | (VOLT_B2 << 8) | VOLT_B1; 
+ 848              		.loc 1 138 0
+ 849 0130 0378     		ldrb	r3, [r0]
+ 850 0132 1A06     		lsls	r2, r3, #24
+ 851 0134 3378     		ldrb	r3, [r6]
+ 852 0136 1B04     		lsls	r3, r3, #16
+ 853 0138 1343     		orrs	r3, r2
+ 854 013a 0A78     		ldrb	r2, [r1]
+ 855 013c 1202     		lsls	r2, r2, #8
+ 856 013e 1343     		orrs	r3, r2
+ 857 0140 2278     		ldrb	r2, [r4]
+ 858 0142 1343     		orrs	r3, r2
+ 859 0144 3A4A     		ldr	r2, .L61+52
+ 860 0146 1360     		str	r3, [r2]
+ 139:can_manga.c   ****             break;
+ 861              		.loc 1 139 0
+ 862 0148 52E0     		b	.L47
+ 863              	.LVL50:
+ 864              	.L57:
+ 141:can_manga.c   ****             ERROR_IDX = data[CAN_0_RX_DATA_BYTE6(ID)];
+ 865              		.loc 1 141 0
+ 866 014a 6401     		lsls	r4, r4, #5
+ 867              	.LVL51:
+ 868 014c 324B     		ldr	r3, .L61+28
+ 869 014e 9C46     		mov	ip, r3
+ 870 0150 6444     		add	r4, r4, ip
+ 871 0152 2368     		ldr	r3, [r4]
+ 872 0154 1B0C     		lsrs	r3, r3, #16
+ 873 0156 FF22     		movs	r2, #255
+ 874 0158 1340     		ands	r3, r2
+ 875 015a 6946     		mov	r1, sp
+ 876 015c C95C     		ldrb	r1, [r1, r3]
+ 877 015e 354B     		ldr	r3, .L61+56
+ 878 0160 1960     		str	r1, [r3]
+ 142:can_manga.c   ****             ERROR_NODE = data[CAN_0_RX_DATA_BYTE7(ID)];
+ 879              		.loc 1 142 0
+ 880 0162 2368     		ldr	r3, [r4]
+ 881 0164 1B0A     		lsrs	r3, r3, #8
+ 882 0166 1340     		ands	r3, r2
+ 883 0168 6946     		mov	r1, sp
+ 884 016a C95C     		ldrb	r1, [r1, r3]
+ 885 016c 324B     		ldr	r3, .L61+60
+ 886 016e 1960     		str	r1, [r3]
+ 143:can_manga.c   ****             PACK_TEMP = data[CAN_0_RX_DATA_BYTE8(ID)];
+ 887              		.loc 1 143 0
+ 888 0170 2368     		ldr	r3, [r4]
+ 889 0172 1340     		ands	r3, r2
+ 890 0174 6A46     		mov	r2, sp
+ 891 0176 D25C     		ldrb	r2, [r2, r3]
+ 892 0178 304B     		ldr	r3, .L61+64
+ 893 017a 1A70     		strb	r2, [r3]
+ 144:can_manga.c   ****             tempAttenuate();
+ 894              		.loc 1 144 0
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 22
+
+
+ 895 017c FFF7FEFF 		bl	tempAttenuate
+ 896              	.LVL52:
+ 145:can_manga.c   ****             break;
+ 897              		.loc 1 145 0
+ 898 0180 36E0     		b	.L47
+ 899              	.LVL53:
+ 900              	.L58:
+ 147:can_manga.c   ****             current_bytes[0] = data[CAN_0_RX_DATA_BYTE3(ID)];
+ 901              		.loc 1 147 0
+ 902 0182 6401     		lsls	r4, r4, #5
+ 903              	.LVL54:
+ 904 0184 224B     		ldr	r3, .L61+20
+ 905 0186 E218     		adds	r2, r4, r3
+ 906 0188 9368     		ldr	r3, [r2, #8]
+ 907 018a 1B0A     		lsrs	r3, r3, #8
+ 908 018c FF27     		movs	r7, #255
+ 909 018e 3B40     		ands	r3, r7
+ 910 0190 6946     		mov	r1, sp
+ 911 0192 C85C     		ldrb	r0, [r1, r3]
+ 912 0194 1F4E     		ldr	r6, .L61+24
+ 913              	.LVL55:
+ 914 0196 3072     		strb	r0, [r6, #8]
+ 148:can_manga.c   ****             current_bytes[1] = data[CAN_0_RX_DATA_BYTE4(ID)];
+ 915              		.loc 1 148 0
+ 916 0198 9368     		ldr	r3, [r2, #8]
+ 917 019a 3B40     		ands	r3, r7
+ 918 019c CA5C     		ldrb	r2, [r1, r3]
+ 919 019e 7272     		strb	r2, [r6, #9]
+ 149:can_manga.c   ****             current_bytes[2] = data[CAN_0_RX_DATA_BYTE5(ID)];
+ 920              		.loc 1 149 0
+ 921 01a0 1D4B     		ldr	r3, .L61+28
+ 922 01a2 9C46     		mov	ip, r3
+ 923 01a4 6444     		add	r4, r4, ip
+ 924 01a6 2368     		ldr	r3, [r4]
+ 925 01a8 1B0E     		lsrs	r3, r3, #24
+ 926 01aa CB5C     		ldrb	r3, [r1, r3]
+ 927 01ac B372     		strb	r3, [r6, #10]
+ 150:can_manga.c   ****             current_bytes[3] = data[CAN_0_RX_DATA_BYTE6(ID)];
+ 928              		.loc 1 150 0
+ 929 01ae 2168     		ldr	r1, [r4]
+ 930 01b0 090C     		lsrs	r1, r1, #16
+ 931 01b2 3940     		ands	r1, r7
+ 932 01b4 6C46     		mov	r4, sp
+ 933 01b6 615C     		ldrb	r1, [r4, r1]
+ 934 01b8 F172     		strb	r1, [r6, #11]
+ 151:can_manga.c   ****             CURRENT = (current_bytes[0] << 24) + (current_bytes[1] << 16) + (current_bytes[2] << 8)
+ 935              		.loc 1 151 0
+ 936 01ba 0006     		lsls	r0, r0, #24
+ 937 01bc 1204     		lsls	r2, r2, #16
+ 938 01be 8218     		adds	r2, r0, r2
+ 939 01c0 1B02     		lsls	r3, r3, #8
+ 940 01c2 D318     		adds	r3, r2, r3
+ 941 01c4 5B18     		adds	r3, r3, r1
+ 942 01c6 1E4A     		ldr	r2, .L61+68
+ 943 01c8 1360     		str	r3, [r2]
+ 152:can_manga.c   ****             break;
+ 944              		.loc 1 152 0
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 23
+
+
+ 945 01ca 11E0     		b	.L47
+ 946              	.LVL56:
+ 947              	.L50:
+ 154:can_manga.c   ****             bms_status = (data[CAN_0_RX_DATA_BYTE3(ID)] << 8) | data[CAN_0_RX_DATA_BYTE4(ID)];  
+ 948              		.loc 1 154 0
+ 949 01cc 6401     		lsls	r4, r4, #5
+ 950              	.LVL57:
+ 951 01ce 104B     		ldr	r3, .L61+20
+ 952 01d0 9C46     		mov	ip, r3
+ 953 01d2 6444     		add	r4, r4, ip
+ 954 01d4 A368     		ldr	r3, [r4, #8]
+ 955 01d6 1B0A     		lsrs	r3, r3, #8
+ 956 01d8 FF21     		movs	r1, #255
+ 957 01da 0B40     		ands	r3, r1
+ 958 01dc 6A46     		mov	r2, sp
+ 959 01de D35C     		ldrb	r3, [r2, r3]
+ 960 01e0 1B02     		lsls	r3, r3, #8
+ 961 01e2 A268     		ldr	r2, [r4, #8]
+ 962 01e4 0A40     		ands	r2, r1
+ 963 01e6 6946     		mov	r1, sp
+ 964 01e8 8A5C     		ldrb	r2, [r1, r2]
+ 965 01ea 1343     		orrs	r3, r2
+ 966 01ec 154A     		ldr	r2, .L61+72
+ 967 01ee 1380     		strh	r3, [r2]
+ 968              	.LVL58:
+ 969              	.L47:
+ 158:can_manga.c   ****     CyExitCriticalSection(InterruptState);
+ 970              		.loc 1 158 0
+ 971 01f0 2800     		movs	r0, r5
+ 972 01f2 FFF7FEFF 		bl	CyExitCriticalSection
+ 973              	.LVL59:
+ 159:can_manga.c   **** }
+ 974              		.loc 1 159 0
+ 975 01f6 03B0     		add	sp, sp, #12
+ 976              		@ sp needed
+ 977              	.LVL60:
+ 978 01f8 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 979              	.L62:
+ 980 01fa C046     		.align	2
+ 981              	.L61:
+ 982 01fc 01020000 		.word	513
+ 983 0200 66050000 		.word	1382
+ 984 0204 21050000 		.word	1313
+ 985 0208 66060000 		.word	1638
+ 986 020c 26070000 		.word	1830
+ 987 0210 A0002E40 		.word	1076756640
+ 988 0214 00000000 		.word	.LANCHOR0
+ 989 0218 AC002E40 		.word	1076756652
+ 990 021c 00000000 		.word	pedalOK
+ 991 0220 00000000 		.word	VOLT_B4
+ 992 0224 00000000 		.word	VOLT_B3
+ 993 0228 00000000 		.word	VOLT_B2
+ 994 022c 00000000 		.word	VOLT_B1
+ 995 0230 00000000 		.word	voltage
+ 996 0234 00000000 		.word	ERROR_IDX
+ 997 0238 00000000 		.word	ERROR_NODE
+ 998 023c 00000000 		.word	PACK_TEMP
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 24
+
+
+ 999 0240 00000000 		.word	CURRENT
+ 1000 0244 00000000 		.word	bms_status
+ 1001              		.cfi_endproc
+ 1002              	.LFE42:
+ 1003              		.size	can_receive, .-can_receive
+ 1004              		.global	current_bytes
+ 1005              		.comm	VOLT_B4,1,1
+ 1006              		.comm	VOLT_B3,1,1
+ 1007              		.comm	VOLT_B2,1,1
+ 1008              		.comm	VOLT_B1,1,1
+ 1009              		.global	THROTTLE_LOW
+ 1010              		.global	THROTTLE_HIGH
+ 1011              		.global	ABS_MOTOR_RPM
+ 1012              		.global	ERROR_TOLERANCE
+ 1013              		.global	ACK_RX
+ 1014              		.global	CURTIS_HEART_BEAT_CHECK
+ 1015              		.global	CURTIS_FAULT_CHECK
+ 1016              		.global	CAPACITOR_VOLT
+ 1017              		.bss
+ 1018              		.align	2
+ 1019              		.set	.LANCHOR0,. + 0
+ 1020              		.type	CAPACITOR_VOLT, %object
+ 1021              		.size	CAPACITOR_VOLT, 1
+ 1022              	CAPACITOR_VOLT:
+ 1023 0000 00       		.space	1
+ 1024              		.type	CURTIS_FAULT_CHECK, %object
+ 1025              		.size	CURTIS_FAULT_CHECK, 1
+ 1026              	CURTIS_FAULT_CHECK:
+ 1027 0001 00       		.space	1
+ 1028              		.type	CURTIS_HEART_BEAT_CHECK, %object
+ 1029              		.size	CURTIS_HEART_BEAT_CHECK, 1
+ 1030              	CURTIS_HEART_BEAT_CHECK:
+ 1031 0002 00       		.space	1
+ 1032              		.type	ACK_RX, %object
+ 1033              		.size	ACK_RX, 1
+ 1034              	ACK_RX:
+ 1035 0003 00       		.space	1
+ 1036              		.type	ERROR_TOLERANCE, %object
+ 1037              		.size	ERROR_TOLERANCE, 1
+ 1038              	ERROR_TOLERANCE:
+ 1039 0004 00       		.space	1
+ 1040              		.type	ABS_MOTOR_RPM, %object
+ 1041              		.size	ABS_MOTOR_RPM, 1
+ 1042              	ABS_MOTOR_RPM:
+ 1043 0005 00       		.space	1
+ 1044              		.type	THROTTLE_LOW, %object
+ 1045              		.size	THROTTLE_LOW, 1
+ 1046              	THROTTLE_LOW:
+ 1047 0006 00       		.space	1
+ 1048              		.type	THROTTLE_HIGH, %object
+ 1049              		.size	THROTTLE_HIGH, 1
+ 1050              	THROTTLE_HIGH:
+ 1051 0007 00       		.space	1
+ 1052              		.type	current_bytes, %object
+ 1053              		.size	current_bytes, 4
+ 1054              	current_bytes:
+ 1055 0008 00000000 		.space	4
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 25
+
+
+ 1056              		.text
+ 1057              	.Letext0:
+ 1058              		.file 2 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 1059              		.file 3 "c:\\program files (x86)\\cypress\\psoc creator\\4.4\\psoc creator\\import\\gnu\\arm\\5.4.
+ 1060              		.file 4 "Generated_Source\\PSoC4/cytypes.h"
+ 1061              		.file 5 "Generated_Source\\PSoC4/CAN_0.h"
+ 1062              		.file 6 "data.h"
+ 1063              		.file 7 "Generated_Source\\PSoC4/CyLib.h"
+ 1064              		.section	.debug_info,"",%progbits
+ 1065              	.Ldebug_info0:
+ 1066 0000 13080000 		.4byte	0x813
+ 1067 0004 0400     		.2byte	0x4
+ 1068 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 1069 000a 04       		.byte	0x4
+ 1070 000b 01       		.uleb128 0x1
+ 1071 000c 42010000 		.4byte	.LASF109
+ 1072 0010 0C       		.byte	0xc
+ 1073 0011 53050000 		.4byte	.LASF110
+ 1074 0015 2E030000 		.4byte	.LASF111
+ 1075 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 1076 001d 00000000 		.4byte	0
+ 1077 0021 00000000 		.4byte	.Ldebug_line0
+ 1078 0025 02       		.uleb128 0x2
+ 1079 0026 01       		.byte	0x1
+ 1080 0027 06       		.byte	0x6
+ 1081 0028 B0030000 		.4byte	.LASF0
+ 1082 002c 03       		.uleb128 0x3
+ 1083 002d B4020000 		.4byte	.LASF3
+ 1084 0031 02       		.byte	0x2
+ 1085 0032 1D       		.byte	0x1d
+ 1086 0033 37000000 		.4byte	0x37
+ 1087 0037 02       		.uleb128 0x2
+ 1088 0038 01       		.byte	0x1
+ 1089 0039 08       		.byte	0x8
+ 1090 003a 20030000 		.4byte	.LASF1
+ 1091 003e 02       		.uleb128 0x2
+ 1092 003f 02       		.byte	0x2
+ 1093 0040 05       		.byte	0x5
+ 1094 0041 8A000000 		.4byte	.LASF2
+ 1095 0045 03       		.uleb128 0x3
+ 1096 0046 FE000000 		.4byte	.LASF4
+ 1097 004a 02       		.byte	0x2
+ 1098 004b 2B       		.byte	0x2b
+ 1099 004c 50000000 		.4byte	0x50
+ 1100 0050 02       		.uleb128 0x2
+ 1101 0051 02       		.byte	0x2
+ 1102 0052 07       		.byte	0x7
+ 1103 0053 50040000 		.4byte	.LASF5
+ 1104 0057 02       		.uleb128 0x2
+ 1105 0058 04       		.byte	0x4
+ 1106 0059 05       		.byte	0x5
+ 1107 005a 94020000 		.4byte	.LASF6
+ 1108 005e 03       		.uleb128 0x3
+ 1109 005f EC000000 		.4byte	.LASF7
+ 1110 0063 02       		.byte	0x2
+ 1111 0064 41       		.byte	0x41
+ 1112 0065 69000000 		.4byte	0x69
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 26
+
+
+ 1113 0069 02       		.uleb128 0x2
+ 1114 006a 04       		.byte	0x4
+ 1115 006b 07       		.byte	0x7
+ 1116 006c 1C040000 		.4byte	.LASF8
+ 1117 0070 02       		.uleb128 0x2
+ 1118 0071 08       		.byte	0x8
+ 1119 0072 05       		.byte	0x5
+ 1120 0073 61020000 		.4byte	.LASF9
+ 1121 0077 02       		.uleb128 0x2
+ 1122 0078 08       		.byte	0x8
+ 1123 0079 07       		.byte	0x7
+ 1124 007a C9030000 		.4byte	.LASF10
+ 1125 007e 04       		.uleb128 0x4
+ 1126 007f 04       		.byte	0x4
+ 1127 0080 05       		.byte	0x5
+ 1128 0081 696E7400 		.ascii	"int\000"
+ 1129 0085 02       		.uleb128 0x2
+ 1130 0086 04       		.byte	0x4
+ 1131 0087 07       		.byte	0x7
+ 1132 0088 01040000 		.4byte	.LASF11
+ 1133 008c 03       		.uleb128 0x3
+ 1134 008d E0010000 		.4byte	.LASF12
+ 1135 0091 03       		.byte	0x3
+ 1136 0092 18       		.byte	0x18
+ 1137 0093 2C000000 		.4byte	0x2c
+ 1138 0097 03       		.uleb128 0x3
+ 1139 0098 0E040000 		.4byte	.LASF13
+ 1140 009c 03       		.byte	0x3
+ 1141 009d 24       		.byte	0x24
+ 1142 009e 45000000 		.4byte	0x45
+ 1143 00a2 03       		.uleb128 0x3
+ 1144 00a3 E0030000 		.4byte	.LASF14
+ 1145 00a7 03       		.byte	0x3
+ 1146 00a8 30       		.byte	0x30
+ 1147 00a9 5E000000 		.4byte	0x5e
+ 1148 00ad 05       		.uleb128 0x5
+ 1149 00ae F7010000 		.4byte	.LASF15
+ 1150 00b2 04       		.byte	0x4
+ 1151 00b3 FC01     		.2byte	0x1fc
+ 1152 00b5 37000000 		.4byte	0x37
+ 1153 00b9 05       		.uleb128 0x5
+ 1154 00ba E8040000 		.4byte	.LASF16
+ 1155 00be 04       		.byte	0x4
+ 1156 00bf FE01     		.2byte	0x1fe
+ 1157 00c1 69000000 		.4byte	0x69
+ 1158 00c5 05       		.uleb128 0x5
+ 1159 00c6 FC040000 		.4byte	.LASF17
+ 1160 00ca 04       		.byte	0x4
+ 1161 00cb 0102     		.2byte	0x201
+ 1162 00cd 57000000 		.4byte	0x57
+ 1163 00d1 02       		.uleb128 0x2
+ 1164 00d2 04       		.byte	0x4
+ 1165 00d3 04       		.byte	0x4
+ 1166 00d4 50020000 		.4byte	.LASF18
+ 1167 00d8 02       		.uleb128 0x2
+ 1168 00d9 08       		.byte	0x8
+ 1169 00da 04       		.byte	0x4
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 27
+
+
+ 1170 00db 09010000 		.4byte	.LASF19
+ 1171 00df 02       		.uleb128 0x2
+ 1172 00e0 01       		.byte	0x1
+ 1173 00e1 08       		.byte	0x8
+ 1174 00e2 82020000 		.4byte	.LASF20
+ 1175 00e6 05       		.uleb128 0x5
+ 1176 00e7 EF040000 		.4byte	.LASF21
+ 1177 00eb 04       		.byte	0x4
+ 1178 00ec A602     		.2byte	0x2a6
+ 1179 00ee F2000000 		.4byte	0xf2
+ 1180 00f2 06       		.uleb128 0x6
+ 1181 00f3 AD000000 		.4byte	0xad
+ 1182 00f7 05       		.uleb128 0x5
+ 1183 00f8 4A040000 		.4byte	.LASF22
+ 1184 00fc 04       		.byte	0x4
+ 1185 00fd A802     		.2byte	0x2a8
+ 1186 00ff 03010000 		.4byte	0x103
+ 1187 0103 06       		.uleb128 0x6
+ 1188 0104 B9000000 		.4byte	0xb9
+ 1189 0108 02       		.uleb128 0x2
+ 1190 0109 08       		.byte	0x8
+ 1191 010a 04       		.byte	0x4
+ 1192 010b F4020000 		.4byte	.LASF23
+ 1193 010f 02       		.uleb128 0x2
+ 1194 0110 04       		.byte	0x4
+ 1195 0111 07       		.byte	0x7
+ 1196 0112 A8000000 		.4byte	.LASF24
+ 1197 0116 07       		.uleb128 0x7
+ 1198 0117 08       		.byte	0x8
+ 1199 0118 05       		.byte	0x5
+ 1200 0119 6F       		.byte	0x6f
+ 1201 011a 2B010000 		.4byte	0x12b
+ 1202 011e 08       		.uleb128 0x8
+ 1203 011f 3E050000 		.4byte	.LASF26
+ 1204 0123 05       		.byte	0x5
+ 1205 0124 71       		.byte	0x71
+ 1206 0125 2B010000 		.4byte	0x12b
+ 1207 0129 00       		.byte	0
+ 1208 012a 00       		.byte	0
+ 1209 012b 09       		.uleb128 0x9
+ 1210 012c AD000000 		.4byte	0xad
+ 1211 0130 3B010000 		.4byte	0x13b
+ 1212 0134 0A       		.uleb128 0xa
+ 1213 0135 0F010000 		.4byte	0x10f
+ 1214 0139 07       		.byte	0x7
+ 1215 013a 00       		.byte	0
+ 1216 013b 03       		.uleb128 0x3
+ 1217 013c 2B020000 		.4byte	.LASF25
+ 1218 0140 05       		.byte	0x5
+ 1219 0141 72       		.byte	0x72
+ 1220 0142 16010000 		.4byte	0x116
+ 1221 0146 07       		.uleb128 0x7
+ 1222 0147 08       		.byte	0x8
+ 1223 0148 05       		.byte	0x5
+ 1224 0149 75       		.byte	0x75
+ 1225 014a 5B010000 		.4byte	0x15b
+ 1226 014e 08       		.uleb128 0x8
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 28
+
+
+ 1227 014f 3E050000 		.4byte	.LASF26
+ 1228 0153 05       		.byte	0x5
+ 1229 0154 77       		.byte	0x77
+ 1230 0155 6B010000 		.4byte	0x16b
+ 1231 0159 00       		.byte	0
+ 1232 015a 00       		.byte	0
+ 1233 015b 09       		.uleb128 0x9
+ 1234 015c E6000000 		.4byte	0xe6
+ 1235 0160 6B010000 		.4byte	0x16b
+ 1236 0164 0A       		.uleb128 0xa
+ 1237 0165 0F010000 		.4byte	0x10f
+ 1238 0169 07       		.byte	0x7
+ 1239 016a 00       		.byte	0
+ 1240 016b 06       		.uleb128 0x6
+ 1241 016c 5B010000 		.4byte	0x15b
+ 1242 0170 03       		.uleb128 0x3
+ 1243 0171 2C000000 		.4byte	.LASF27
+ 1244 0175 05       		.byte	0x5
+ 1245 0176 78       		.byte	0x78
+ 1246 0177 46010000 		.4byte	0x146
+ 1247 017b 07       		.uleb128 0x7
+ 1248 017c 04       		.byte	0x4
+ 1249 017d 05       		.byte	0x5
+ 1250 017e 7B       		.byte	0x7b
+ 1251 017f 90010000 		.4byte	0x190
+ 1252 0183 08       		.uleb128 0x8
+ 1253 0184 3E050000 		.4byte	.LASF26
+ 1254 0188 05       		.byte	0x5
+ 1255 0189 7D       		.byte	0x7d
+ 1256 018a A0010000 		.4byte	0x1a0
+ 1257 018e 00       		.byte	0
+ 1258 018f 00       		.byte	0
+ 1259 0190 09       		.uleb128 0x9
+ 1260 0191 E6000000 		.4byte	0xe6
+ 1261 0195 A0010000 		.4byte	0x1a0
+ 1262 0199 0A       		.uleb128 0xa
+ 1263 019a 0F010000 		.4byte	0x10f
+ 1264 019e 03       		.byte	0x3
+ 1265 019f 00       		.byte	0
+ 1266 01a0 06       		.uleb128 0x6
+ 1267 01a1 90010000 		.4byte	0x190
+ 1268 01a5 03       		.uleb128 0x3
+ 1269 01a6 DE050000 		.4byte	.LASF28
+ 1270 01aa 05       		.byte	0x5
+ 1271 01ab 7E       		.byte	0x7e
+ 1272 01ac 7B010000 		.4byte	0x17b
+ 1273 01b0 07       		.uleb128 0x7
+ 1274 01b1 10       		.byte	0x10
+ 1275 01b2 05       		.byte	0x5
+ 1276 01b3 81       		.byte	0x81
+ 1277 01b4 0C020000 		.4byte	0x20c
+ 1278 01b8 0B       		.uleb128 0xb
+ 1279 01b9 696400   		.ascii	"id\000"
+ 1280 01bc 05       		.byte	0x5
+ 1281 01bd 83       		.byte	0x83
+ 1282 01be B9000000 		.4byte	0xb9
+ 1283 01c2 00       		.byte	0
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 29
+
+
+ 1284 01c3 0B       		.uleb128 0xb
+ 1285 01c4 72747200 		.ascii	"rtr\000"
+ 1286 01c8 05       		.byte	0x5
+ 1287 01c9 84       		.byte	0x84
+ 1288 01ca AD000000 		.4byte	0xad
+ 1289 01ce 04       		.byte	0x4
+ 1290 01cf 0B       		.uleb128 0xb
+ 1291 01d0 69646500 		.ascii	"ide\000"
+ 1292 01d4 05       		.byte	0x5
+ 1293 01d5 85       		.byte	0x85
+ 1294 01d6 AD000000 		.4byte	0xad
+ 1295 01da 05       		.byte	0x5
+ 1296 01db 0B       		.uleb128 0xb
+ 1297 01dc 646C6300 		.ascii	"dlc\000"
+ 1298 01e0 05       		.byte	0x5
+ 1299 01e1 86       		.byte	0x86
+ 1300 01e2 AD000000 		.4byte	0xad
+ 1301 01e6 06       		.byte	0x6
+ 1302 01e7 0B       		.uleb128 0xb
+ 1303 01e8 69727100 		.ascii	"irq\000"
+ 1304 01ec 05       		.byte	0x5
+ 1305 01ed 87       		.byte	0x87
+ 1306 01ee AD000000 		.4byte	0xad
+ 1307 01f2 07       		.byte	0x7
+ 1308 01f3 0B       		.uleb128 0xb
+ 1309 01f4 73737400 		.ascii	"sst\000"
+ 1310 01f8 05       		.byte	0x5
+ 1311 01f9 89       		.byte	0x89
+ 1312 01fa AD000000 		.4byte	0xad
+ 1313 01fe 08       		.byte	0x8
+ 1314 01ff 0B       		.uleb128 0xb
+ 1315 0200 6D736700 		.ascii	"msg\000"
+ 1316 0204 05       		.byte	0x5
+ 1317 0205 8B       		.byte	0x8b
+ 1318 0206 0C020000 		.4byte	0x20c
+ 1319 020a 0C       		.byte	0xc
+ 1320 020b 00       		.byte	0
+ 1321 020c 0C       		.uleb128 0xc
+ 1322 020d 04       		.byte	0x4
+ 1323 020e 3B010000 		.4byte	0x13b
+ 1324 0212 03       		.uleb128 0x3
+ 1325 0213 07000000 		.4byte	.LASF29
+ 1326 0217 05       		.byte	0x5
+ 1327 0218 8C       		.byte	0x8c
+ 1328 0219 B0010000 		.4byte	0x1b0
+ 1329 021d 07       		.uleb128 0x7
+ 1330 021e 20       		.byte	0x20
+ 1331 021f 05       		.byte	0x5
+ 1332 0220 A0       		.byte	0xa0
+ 1333 0221 7A020000 		.4byte	0x27a
+ 1334 0225 08       		.uleb128 0x8
+ 1335 0226 AA030000 		.4byte	.LASF30
+ 1336 022a 05       		.byte	0x5
+ 1337 022b A2       		.byte	0xa2
+ 1338 022c A5010000 		.4byte	0x1a5
+ 1339 0230 00       		.byte	0
+ 1340 0231 08       		.uleb128 0x8
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 30
+
+
+ 1341 0232 9C030000 		.4byte	.LASF31
+ 1342 0236 05       		.byte	0x5
+ 1343 0237 A3       		.byte	0xa3
+ 1344 0238 A5010000 		.4byte	0x1a5
+ 1345 023c 04       		.byte	0x4
+ 1346 023d 08       		.uleb128 0x8
+ 1347 023e F7000000 		.4byte	.LASF32
+ 1348 0242 05       		.byte	0x5
+ 1349 0243 A4       		.byte	0xa4
+ 1350 0244 70010000 		.4byte	0x170
+ 1351 0248 08       		.byte	0x8
+ 1352 0249 08       		.uleb128 0x8
+ 1353 024a EB050000 		.4byte	.LASF33
+ 1354 024e 05       		.byte	0x5
+ 1355 024f A5       		.byte	0xa5
+ 1356 0250 A5010000 		.4byte	0x1a5
+ 1357 0254 10       		.byte	0x10
+ 1358 0255 08       		.uleb128 0x8
+ 1359 0256 EE020000 		.4byte	.LASF34
+ 1360 025a 05       		.byte	0x5
+ 1361 025b A6       		.byte	0xa6
+ 1362 025c A5010000 		.4byte	0x1a5
+ 1363 0260 14       		.byte	0x14
+ 1364 0261 08       		.uleb128 0x8
+ 1365 0262 00000000 		.4byte	.LASF35
+ 1366 0266 05       		.byte	0x5
+ 1367 0267 A7       		.byte	0xa7
+ 1368 0268 A5010000 		.4byte	0x1a5
+ 1369 026c 18       		.byte	0x18
+ 1370 026d 08       		.uleb128 0x8
+ 1371 026e CA000000 		.4byte	.LASF36
+ 1372 0272 05       		.byte	0x5
+ 1373 0273 A8       		.byte	0xa8
+ 1374 0274 A5010000 		.4byte	0x1a5
+ 1375 0278 1C       		.byte	0x1c
+ 1376 0279 00       		.byte	0
+ 1377 027a 03       		.uleb128 0x3
+ 1378 027b D0010000 		.4byte	.LASF37
+ 1379 027f 05       		.byte	0x5
+ 1380 0280 A9       		.byte	0xa9
+ 1381 0281 1D020000 		.4byte	0x21d
+ 1382 0285 06       		.uleb128 0x6
+ 1383 0286 A2000000 		.4byte	0xa2
+ 1384 028a 0D       		.uleb128 0xd
+ 1385 028b 02       		.byte	0x2
+ 1386 028c 50000000 		.4byte	0x50
+ 1387 0290 06       		.byte	0x6
+ 1388 0291 09       		.byte	0x9
+ 1389 0292 05030000 		.4byte	0x305
+ 1390 0296 0E       		.uleb128 0xe
+ 1391 0297 57000000 		.4byte	.LASF38
+ 1392 029b 00       		.byte	0
+ 1393 029c 0E       		.uleb128 0xe
+ 1394 029d 76050000 		.4byte	.LASF39
+ 1395 02a1 01       		.byte	0x1
+ 1396 02a2 0E       		.uleb128 0xe
+ 1397 02a3 1D000000 		.4byte	.LASF40
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 31
+
+
+ 1398 02a7 02       		.byte	0x2
+ 1399 02a8 0E       		.uleb128 0xe
+ 1400 02a9 19020000 		.4byte	.LASF41
+ 1401 02ad 04       		.byte	0x4
+ 1402 02ae 0E       		.uleb128 0xe
+ 1403 02af 43050000 		.4byte	.LASF42
+ 1404 02b3 08       		.byte	0x8
+ 1405 02b4 0E       		.uleb128 0xe
+ 1406 02b5 42040000 		.4byte	.LASF43
+ 1407 02b9 10       		.byte	0x10
+ 1408 02ba 0E       		.uleb128 0xe
+ 1409 02bb BC030000 		.4byte	.LASF44
+ 1410 02bf 20       		.byte	0x20
+ 1411 02c0 0E       		.uleb128 0xe
+ 1412 02c1 AC040000 		.4byte	.LASF45
+ 1413 02c5 40       		.byte	0x40
+ 1414 02c6 0E       		.uleb128 0xe
+ 1415 02c7 14030000 		.4byte	.LASF46
+ 1416 02cb 80       		.byte	0x80
+ 1417 02cc 0F       		.uleb128 0xf
+ 1418 02cd 88040000 		.4byte	.LASF47
+ 1419 02d1 0001     		.2byte	0x100
+ 1420 02d3 0F       		.uleb128 0xf
+ 1421 02d4 40020000 		.4byte	.LASF48
+ 1422 02d8 0002     		.2byte	0x200
+ 1423 02da 0F       		.uleb128 0xf
+ 1424 02db A2040000 		.4byte	.LASF49
+ 1425 02df 0004     		.2byte	0x400
+ 1426 02e1 0F       		.uleb128 0xf
+ 1427 02e2 BE020000 		.4byte	.LASF50
+ 1428 02e6 0008     		.2byte	0x800
+ 1429 02e8 0F       		.uleb128 0xf
+ 1430 02e9 66050000 		.4byte	.LASF51
+ 1431 02ed 0010     		.2byte	0x1000
+ 1432 02ef 0F       		.uleb128 0xf
+ 1433 02f0 02050000 		.4byte	.LASF52
+ 1434 02f4 0020     		.2byte	0x2000
+ 1435 02f6 0F       		.uleb128 0xf
+ 1436 02f7 17040000 		.4byte	.LASF53
+ 1437 02fb 0040     		.2byte	0x4000
+ 1438 02fd 0F       		.uleb128 0xf
+ 1439 02fe D7040000 		.4byte	.LASF54
+ 1440 0302 0080     		.2byte	0x8000
+ 1441 0304 00       		.byte	0
+ 1442 0305 03       		.uleb128 0x3
+ 1443 0306 63040000 		.4byte	.LASF55
+ 1444 030a 06       		.byte	0x6
+ 1445 030b 1B       		.byte	0x1b
+ 1446 030c 8A020000 		.4byte	0x28a
+ 1447 0310 09       		.uleb128 0x9
+ 1448 0311 8C000000 		.4byte	0x8c
+ 1449 0315 20030000 		.4byte	0x320
+ 1450 0319 0A       		.uleb128 0xa
+ 1451 031a 0F010000 		.4byte	0x10f
+ 1452 031e 07       		.byte	0x7
+ 1453 031f 00       		.byte	0
+ 1454 0320 10       		.uleb128 0x10
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 32
+
+
+ 1455 0321 2E040000 		.4byte	.LASF56
+ 1456 0325 01       		.byte	0x1
+ 1457 0326 2F       		.byte	0x2f
+ 1458 0327 8C000000 		.4byte	0x8c
+ 1459 032b 00000000 		.4byte	.LFB34
+ 1460 032f 0C000000 		.4byte	.LFE34-.LFB34
+ 1461 0333 01       		.uleb128 0x1
+ 1462 0334 9C       		.byte	0x9c
+ 1463 0335 10       		.uleb128 0x10
+ 1464 0336 94000000 		.4byte	.LASF57
+ 1465 033a 01       		.byte	0x1
+ 1466 033b 35       		.byte	0x35
+ 1467 033c 8C000000 		.4byte	0x8c
+ 1468 0340 00000000 		.4byte	.LFB35
+ 1469 0344 0C000000 		.4byte	.LFE35-.LFB35
+ 1470 0348 01       		.uleb128 0x1
+ 1471 0349 9C       		.byte	0x9c
+ 1472 034a 10       		.uleb128 0x10
+ 1473 034b 18050000 		.4byte	.LASF58
+ 1474 034f 01       		.byte	0x1
+ 1475 0350 3C       		.byte	0x3c
+ 1476 0351 8C000000 		.4byte	0x8c
+ 1477 0355 00000000 		.4byte	.LFB36
+ 1478 0359 0C000000 		.4byte	.LFE36-.LFB36
+ 1479 035d 01       		.uleb128 0x1
+ 1480 035e 9C       		.byte	0x9c
+ 1481 035f 10       		.uleb128 0x10
+ 1482 0360 A1030000 		.4byte	.LASF59
+ 1483 0364 01       		.byte	0x1
+ 1484 0365 42       		.byte	0x42
+ 1485 0366 8C000000 		.4byte	0x8c
+ 1486 036a 00000000 		.4byte	.LFB37
+ 1487 036e 0C000000 		.4byte	.LFE37-.LFB37
+ 1488 0372 01       		.uleb128 0x1
+ 1489 0373 9C       		.byte	0x9c
+ 1490 0374 10       		.uleb128 0x10
+ 1491 0375 DC020000 		.4byte	.LASF60
+ 1492 0379 01       		.byte	0x1
+ 1493 037a 49       		.byte	0x49
+ 1494 037b 8C000000 		.4byte	0x8c
+ 1495 037f 00000000 		.4byte	.LFB38
+ 1496 0383 0C000000 		.4byte	.LFE38-.LFB38
+ 1497 0387 01       		.uleb128 0x1
+ 1498 0388 9C       		.byte	0x9c
+ 1499 0389 10       		.uleb128 0x10
+ 1500 038a E8010000 		.4byte	.LASF61
+ 1501 038e 01       		.byte	0x1
+ 1502 038f 50       		.byte	0x50
+ 1503 0390 8C000000 		.4byte	0x8c
+ 1504 0394 00000000 		.4byte	.LFB39
+ 1505 0398 0C000000 		.4byte	.LFE39-.LFB39
+ 1506 039c 01       		.uleb128 0x1
+ 1507 039d 9C       		.byte	0x9c
+ 1508 039e 10       		.uleb128 0x10
+ 1509 039f 6F020000 		.4byte	.LASF62
+ 1510 03a3 01       		.byte	0x1
+ 1511 03a4 57       		.byte	0x57
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 33
+
+
+ 1512 03a5 8C000000 		.4byte	0x8c
+ 1513 03a9 00000000 		.4byte	.LFB40
+ 1514 03ad 0C000000 		.4byte	.LFE40-.LFB40
+ 1515 03b1 01       		.uleb128 0x1
+ 1516 03b2 9C       		.byte	0x9c
+ 1517 03b3 10       		.uleb128 0x10
+ 1518 03b4 DF000000 		.4byte	.LASF63
+ 1519 03b8 01       		.byte	0x1
+ 1520 03b9 5C       		.byte	0x5c
+ 1521 03ba 8C000000 		.4byte	0x8c
+ 1522 03be 00000000 		.4byte	.LFB41
+ 1523 03c2 0C000000 		.4byte	.LFE41-.LFB41
+ 1524 03c6 01       		.uleb128 0x1
+ 1525 03c7 9C       		.byte	0x9c
+ 1526 03c8 11       		.uleb128 0x11
+ 1527 03c9 76000000 		.4byte	.LASF79
+ 1528 03cd 01       		.byte	0x1
+ 1529 03ce A2       		.byte	0xa2
+ 1530 03cf 00000000 		.4byte	.LFB43
+ 1531 03d3 46000000 		.4byte	.LFE43-.LFB43
+ 1532 03d7 01       		.uleb128 0x1
+ 1533 03d8 9C       		.byte	0x9c
+ 1534 03d9 FC030000 		.4byte	0x3fc
+ 1535 03dd 12       		.uleb128 0x12
+ 1536 03de 7B020000 		.4byte	.LASF65
+ 1537 03e2 01       		.byte	0x1
+ 1538 03e3 A5       		.byte	0xa5
+ 1539 03e4 12020000 		.4byte	0x212
+ 1540 03e8 02       		.uleb128 0x2
+ 1541 03e9 91       		.byte	0x91
+ 1542 03ea 68       		.sleb128 -24
+ 1543 03eb 13       		.uleb128 0x13
+ 1544 03ec 42000000 		.4byte	.LVL0
+ 1545 03f0 E0070000 		.4byte	0x7e0
+ 1546 03f4 14       		.uleb128 0x14
+ 1547 03f5 01       		.uleb128 0x1
+ 1548 03f6 50       		.byte	0x50
+ 1549 03f7 02       		.uleb128 0x2
+ 1550 03f8 91       		.byte	0x91
+ 1551 03f9 68       		.sleb128 -24
+ 1552 03fa 00       		.byte	0
+ 1553 03fb 00       		.byte	0
+ 1554 03fc 15       		.uleb128 0x15
+ 1555 03fd 14000000 		.4byte	.LASF68
+ 1556 0401 01       		.byte	0x1
+ 1557 0402 BA       		.byte	0xba
+ 1558 0403 00000000 		.4byte	.LFB44
+ 1559 0407 34000000 		.4byte	.LFE44-.LFB44
+ 1560 040b 01       		.uleb128 0x1
+ 1561 040c 9C       		.byte	0x9c
+ 1562 040d 68040000 		.4byte	0x468
+ 1563 0411 16       		.uleb128 0x16
+ 1564 0412 B6040000 		.4byte	.LASF64
+ 1565 0416 01       		.byte	0x1
+ 1566 0417 BA       		.byte	0xba
+ 1567 0418 68040000 		.4byte	0x468
+ 1568 041c 00000000 		.4byte	.LLST0
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 34
+
+
+ 1569 0420 17       		.uleb128 0x17
+ 1570 0421 494400   		.ascii	"ID\000"
+ 1571 0424 01       		.byte	0x1
+ 1572 0425 BA       		.byte	0xba
+ 1573 0426 A2000000 		.4byte	0xa2
+ 1574 042a 21000000 		.4byte	.LLST1
+ 1575 042e 18       		.uleb128 0x18
+ 1576 042f 6900     		.ascii	"i\000"
+ 1577 0431 01       		.byte	0x1
+ 1578 0432 BC       		.byte	0xbc
+ 1579 0433 8C000000 		.4byte	0x8c
+ 1580 0437 66000000 		.4byte	.LLST2
+ 1581 043b 12       		.uleb128 0x12
+ 1582 043c F4040000 		.4byte	.LASF66
+ 1583 0440 01       		.byte	0x1
+ 1584 0441 BD       		.byte	0xbd
+ 1585 0442 12020000 		.4byte	0x212
+ 1586 0446 02       		.uleb128 0x2
+ 1587 0447 91       		.byte	0x91
+ 1588 0448 68       		.sleb128 -24
+ 1589 0449 12       		.uleb128 0x12
+ 1590 044a 1D060000 		.4byte	.LASF67
+ 1591 044e 01       		.byte	0x1
+ 1592 044f BE       		.byte	0xbe
+ 1593 0450 3B010000 		.4byte	0x13b
+ 1594 0454 02       		.uleb128 0x2
+ 1595 0455 91       		.byte	0x91
+ 1596 0456 60       		.sleb128 -32
+ 1597 0457 13       		.uleb128 0x13
+ 1598 0458 30000000 		.4byte	.LVL9
+ 1599 045c E0070000 		.4byte	0x7e0
+ 1600 0460 14       		.uleb128 0x14
+ 1601 0461 01       		.uleb128 0x1
+ 1602 0462 50       		.byte	0x50
+ 1603 0463 02       		.uleb128 0x2
+ 1604 0464 91       		.byte	0x91
+ 1605 0465 68       		.sleb128 -24
+ 1606 0466 00       		.byte	0
+ 1607 0467 00       		.byte	0
+ 1608 0468 0C       		.uleb128 0xc
+ 1609 0469 04       		.byte	0x4
+ 1610 046a 8C000000 		.4byte	0x8c
+ 1611 046e 15       		.uleb128 0x15
+ 1612 046f 6E040000 		.4byte	.LASF69
+ 1613 0473 01       		.byte	0x1
+ 1614 0474 CA       		.byte	0xca
+ 1615 0475 00000000 		.4byte	.LFB45
+ 1616 0479 2C000000 		.4byte	.LFE45-.LFB45
+ 1617 047d 01       		.uleb128 0x1
+ 1618 047e 9C       		.byte	0x9c
+ 1619 047f C7040000 		.4byte	0x4c7
+ 1620 0483 16       		.uleb128 0x16
+ 1621 0484 84000000 		.4byte	.LASF70
+ 1622 0488 01       		.byte	0x1
+ 1623 0489 CB       		.byte	0xcb
+ 1624 048a 8C000000 		.4byte	0x8c
+ 1625 048e 90000000 		.4byte	.LLST3
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 35
+
+
+ 1626 0492 16       		.uleb128 0x16
+ 1627 0493 56020000 		.4byte	.LASF71
+ 1628 0497 01       		.byte	0x1
+ 1629 0498 CC       		.byte	0xcc
+ 1630 0499 8C000000 		.4byte	0x8c
+ 1631 049d BD000000 		.4byte	.LLST4
+ 1632 04a1 12       		.uleb128 0x12
+ 1633 04a2 B6040000 		.4byte	.LASF64
+ 1634 04a6 01       		.byte	0x1
+ 1635 04a7 CF       		.byte	0xcf
+ 1636 04a8 10030000 		.4byte	0x310
+ 1637 04ac 02       		.uleb128 0x2
+ 1638 04ad 91       		.byte	0x91
+ 1639 04ae 70       		.sleb128 -16
+ 1640 04af 13       		.uleb128 0x13
+ 1641 04b0 22000000 		.4byte	.LVL13
+ 1642 04b4 FC030000 		.4byte	0x3fc
+ 1643 04b8 14       		.uleb128 0x14
+ 1644 04b9 01       		.uleb128 0x1
+ 1645 04ba 50       		.byte	0x50
+ 1646 04bb 02       		.uleb128 0x2
+ 1647 04bc 7D       		.byte	0x7d
+ 1648 04bd 00       		.sleb128 0
+ 1649 04be 14       		.uleb128 0x14
+ 1650 04bf 01       		.uleb128 0x1
+ 1651 04c0 51       		.byte	0x51
+ 1652 04c1 03       		.uleb128 0x3
+ 1653 04c2 0A       		.byte	0xa
+ 1654 04c3 2606     		.2byte	0x626
+ 1655 04c5 00       		.byte	0
+ 1656 04c6 00       		.byte	0
+ 1657 04c7 15       		.uleb128 0x15
+ 1658 04c8 18010000 		.4byte	.LASF72
+ 1659 04cc 01       		.byte	0x1
+ 1660 04cd E1       		.byte	0xe1
+ 1661 04ce 00000000 		.4byte	.LFB46
+ 1662 04d2 30000000 		.4byte	.LFE46-.LFB46
+ 1663 04d6 01       		.uleb128 0x1
+ 1664 04d7 9C       		.byte	0x9c
+ 1665 04d8 42050000 		.4byte	0x542
+ 1666 04dc 16       		.uleb128 0x16
+ 1667 04dd B1000000 		.4byte	.LASF73
+ 1668 04e1 01       		.byte	0x1
+ 1669 04e2 E2       		.byte	0xe2
+ 1670 04e3 8C000000 		.4byte	0x8c
+ 1671 04e7 EA000000 		.4byte	.LLST5
+ 1672 04eb 16       		.uleb128 0x16
+ 1673 04ec 30010000 		.4byte	.LASF74
+ 1674 04f0 01       		.byte	0x1
+ 1675 04f1 E3       		.byte	0xe3
+ 1676 04f2 97000000 		.4byte	0x97
+ 1677 04f6 17010000 		.4byte	.LLST6
+ 1678 04fa 16       		.uleb128 0x16
+ 1679 04fb BB040000 		.4byte	.LASF75
+ 1680 04ff 01       		.byte	0x1
+ 1681 0500 E4       		.byte	0xe4
+ 1682 0501 97000000 		.4byte	0x97
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 36
+
+
+ 1683 0505 38010000 		.4byte	.LLST7
+ 1684 0509 12       		.uleb128 0x12
+ 1685 050a B6040000 		.4byte	.LASF64
+ 1686 050e 01       		.byte	0x1
+ 1687 050f E9       		.byte	0xe9
+ 1688 0510 10030000 		.4byte	0x310
+ 1689 0514 02       		.uleb128 0x2
+ 1690 0515 91       		.byte	0x91
+ 1691 0516 70       		.sleb128 -16
+ 1692 0517 19       		.uleb128 0x19
+ 1693 0518 22000000 		.4byte	.LVL18
+ 1694 051c FC030000 		.4byte	0x3fc
+ 1695 0520 32050000 		.4byte	0x532
+ 1696 0524 14       		.uleb128 0x14
+ 1697 0525 01       		.uleb128 0x1
+ 1698 0526 50       		.byte	0x50
+ 1699 0527 02       		.uleb128 0x2
+ 1700 0528 7D       		.byte	0x7d
+ 1701 0529 00       		.sleb128 0
+ 1702 052a 14       		.uleb128 0x14
+ 1703 052b 01       		.uleb128 0x1
+ 1704 052c 51       		.byte	0x51
+ 1705 052d 03       		.uleb128 0x3
+ 1706 052e 0A       		.byte	0xa
+ 1707 052f 6607     		.2byte	0x766
+ 1708 0531 00       		.byte	0
+ 1709 0532 13       		.uleb128 0x13
+ 1710 0533 28000000 		.4byte	.LVL19
+ 1711 0537 EC070000 		.4byte	0x7ec
+ 1712 053b 14       		.uleb128 0x14
+ 1713 053c 01       		.uleb128 0x1
+ 1714 053d 50       		.byte	0x50
+ 1715 053e 01       		.uleb128 0x1
+ 1716 053f 31       		.byte	0x31
+ 1717 0540 00       		.byte	0
+ 1718 0541 00       		.byte	0
+ 1719 0542 15       		.uleb128 0x15
+ 1720 0543 F1050000 		.4byte	.LASF76
+ 1721 0547 01       		.byte	0x1
+ 1722 0548 FC       		.byte	0xfc
+ 1723 0549 00000000 		.4byte	.LFB47
+ 1724 054d 28000000 		.4byte	.LFE47-.LFB47
+ 1725 0551 01       		.uleb128 0x1
+ 1726 0552 9C       		.byte	0x9c
+ 1727 0553 B9050000 		.4byte	0x5b9
+ 1728 0557 16       		.uleb128 0x16
+ 1729 0558 00030000 		.4byte	.LASF77
+ 1730 055c 01       		.byte	0x1
+ 1731 055d FC       		.byte	0xfc
+ 1732 055e 8C000000 		.4byte	0x8c
+ 1733 0562 59010000 		.4byte	.LLST8
+ 1734 0566 16       		.uleb128 0x16
+ 1735 0567 0F050000 		.4byte	.LASF78
+ 1736 056b 01       		.byte	0x1
+ 1737 056c FC       		.byte	0xfc
+ 1738 056d 8C000000 		.4byte	0x8c
+ 1739 0571 7A010000 		.4byte	.LLST9
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 37
+
+
+ 1740 0575 12       		.uleb128 0x12
+ 1741 0576 B6040000 		.4byte	.LASF64
+ 1742 057a 01       		.byte	0x1
+ 1743 057b FD       		.byte	0xfd
+ 1744 057c 10030000 		.4byte	0x310
+ 1745 0580 02       		.uleb128 0x2
+ 1746 0581 91       		.byte	0x91
+ 1747 0582 68       		.sleb128 -24
+ 1748 0583 19       		.uleb128 0x19
+ 1749 0584 12000000 		.4byte	.LVL23
+ 1750 0588 F7070000 		.4byte	0x7f7
+ 1751 058c A1050000 		.4byte	0x5a1
+ 1752 0590 14       		.uleb128 0x14
+ 1753 0591 01       		.uleb128 0x1
+ 1754 0592 50       		.byte	0x50
+ 1755 0593 02       		.uleb128 0x2
+ 1756 0594 7D       		.byte	0x7d
+ 1757 0595 00       		.sleb128 0
+ 1758 0596 14       		.uleb128 0x14
+ 1759 0597 01       		.uleb128 0x1
+ 1760 0598 51       		.byte	0x51
+ 1761 0599 01       		.uleb128 0x1
+ 1762 059a 30       		.byte	0x30
+ 1763 059b 14       		.uleb128 0x14
+ 1764 059c 01       		.uleb128 0x1
+ 1765 059d 52       		.byte	0x52
+ 1766 059e 01       		.uleb128 0x1
+ 1767 059f 38       		.byte	0x38
+ 1768 05a0 00       		.byte	0
+ 1769 05a1 13       		.uleb128 0x13
+ 1770 05a2 20000000 		.4byte	.LVL24
+ 1771 05a6 FC030000 		.4byte	0x3fc
+ 1772 05aa 14       		.uleb128 0x14
+ 1773 05ab 01       		.uleb128 0x1
+ 1774 05ac 50       		.byte	0x50
+ 1775 05ad 02       		.uleb128 0x2
+ 1776 05ae 7D       		.byte	0x7d
+ 1777 05af 00       		.sleb128 0
+ 1778 05b0 14       		.uleb128 0x14
+ 1779 05b1 01       		.uleb128 0x1
+ 1780 05b2 51       		.byte	0x51
+ 1781 05b3 03       		.uleb128 0x3
+ 1782 05b4 0A       		.byte	0xa
+ 1783 05b5 8903     		.2byte	0x389
+ 1784 05b7 00       		.byte	0
+ 1785 05b8 00       		.byte	0
+ 1786 05b9 1A       		.uleb128 0x1a
+ 1787 05ba D1000000 		.4byte	.LASF80
+ 1788 05be 01       		.byte	0x1
+ 1789 05bf 0401     		.2byte	0x104
+ 1790 05c1 00000000 		.4byte	.LFB48
+ 1791 05c5 64000000 		.4byte	.LFE48-.LFB48
+ 1792 05c9 01       		.uleb128 0x1
+ 1793 05ca 9C       		.byte	0x9c
+ 1794 05cb DE050000 		.4byte	0x5de
+ 1795 05cf 1B       		.uleb128 0x1b
+ 1796 05d0 7400     		.ascii	"t\000"
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 38
+
+
+ 1797 05d2 01       		.byte	0x1
+ 1798 05d3 0501     		.2byte	0x105
+ 1799 05d5 7E000000 		.4byte	0x7e
+ 1800 05d9 9B010000 		.4byte	.LLST10
+ 1801 05dd 00       		.byte	0
+ 1802 05de 15       		.uleb128 0x15
+ 1803 05df BE000000 		.4byte	.LASF81
+ 1804 05e3 01       		.byte	0x1
+ 1805 05e4 64       		.byte	0x64
+ 1806 05e5 00000000 		.4byte	.LFB42
+ 1807 05e9 48020000 		.4byte	.LFE42-.LFB42
+ 1808 05ed 01       		.uleb128 0x1
+ 1809 05ee 9C       		.byte	0x9c
+ 1810 05ef 5D060000 		.4byte	0x65d
+ 1811 05f3 17       		.uleb128 0x17
+ 1812 05f4 6D736700 		.ascii	"msg\000"
+ 1813 05f8 01       		.byte	0x1
+ 1814 05f9 64       		.byte	0x64
+ 1815 05fa 68040000 		.4byte	0x468
+ 1816 05fe D1010000 		.4byte	.LLST11
+ 1817 0602 17       		.uleb128 0x17
+ 1818 0603 494400   		.ascii	"ID\000"
+ 1819 0606 01       		.byte	0x1
+ 1820 0607 64       		.byte	0x64
+ 1821 0608 7E000000 		.4byte	0x7e
+ 1822 060c 2F020000 		.4byte	.LLST12
+ 1823 0610 1C       		.uleb128 0x1c
+ 1824 0611 A5020000 		.4byte	.LASF82
+ 1825 0615 01       		.byte	0x1
+ 1826 0616 66       		.byte	0x66
+ 1827 0617 AD000000 		.4byte	0xad
+ 1828 061b 0A030000 		.4byte	.LLST13
+ 1829 061f 12       		.uleb128 0x12
+ 1830 0620 B6040000 		.4byte	.LASF64
+ 1831 0624 01       		.byte	0x1
+ 1832 0625 69       		.byte	0x69
+ 1833 0626 10030000 		.4byte	0x310
+ 1834 062a 02       		.uleb128 0x2
+ 1835 062b 91       		.byte	0x91
+ 1836 062c 60       		.sleb128 -32
+ 1837 062d 18       		.uleb128 0x18
+ 1838 062e 6900     		.ascii	"i\000"
+ 1839 0630 01       		.byte	0x1
+ 1840 0631 6A       		.byte	0x6a
+ 1841 0632 7E000000 		.4byte	0x7e
+ 1842 0636 1D030000 		.4byte	.LLST14
+ 1843 063a 1D       		.uleb128 0x1d
+ 1844 063b 0C000000 		.4byte	.LVL35
+ 1845 063f 00080000 		.4byte	0x800
+ 1846 0643 1D       		.uleb128 0x1d
+ 1847 0644 80010000 		.4byte	.LVL52
+ 1848 0648 B9050000 		.4byte	0x5b9
+ 1849 064c 13       		.uleb128 0x13
+ 1850 064d F6010000 		.4byte	.LVL59
+ 1851 0651 0B080000 		.4byte	0x80b
+ 1852 0655 14       		.uleb128 0x14
+ 1853 0656 01       		.uleb128 0x1
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 39
+
+
+ 1854 0657 50       		.byte	0x50
+ 1855 0658 02       		.uleb128 0x2
+ 1856 0659 75       		.byte	0x75
+ 1857 065a 00       		.sleb128 0
+ 1858 065b 00       		.byte	0
+ 1859 065c 00       		.byte	0
+ 1860 065d 1E       		.uleb128 0x1e
+ 1861 065e 10010000 		.4byte	.LASF83
+ 1862 0662 01       		.byte	0x1
+ 1863 0663 13       		.byte	0x13
+ 1864 0664 85020000 		.4byte	0x285
+ 1865 0668 1E       		.uleb128 0x1e
+ 1866 0669 01060000 		.4byte	.LASF84
+ 1867 066d 01       		.byte	0x1
+ 1868 066e 14       		.byte	0x14
+ 1869 066f 73060000 		.4byte	0x673
+ 1870 0673 06       		.uleb128 0x6
+ 1871 0674 D8000000 		.4byte	0xd8
+ 1872 0678 09       		.uleb128 0x9
+ 1873 0679 88060000 		.4byte	0x688
+ 1874 067d 88060000 		.4byte	0x688
+ 1875 0681 0A       		.uleb128 0xa
+ 1876 0682 0F010000 		.4byte	0x10f
+ 1877 0686 07       		.byte	0x7
+ 1878 0687 00       		.byte	0
+ 1879 0688 1F       		.uleb128 0x1f
+ 1880 0689 D8000000 		.4byte	0xd8
+ 1881 068d 1E       		.uleb128 0x1e
+ 1882 068e 07030000 		.4byte	.LASF85
+ 1883 0692 01       		.byte	0x1
+ 1884 0693 15       		.byte	0x15
+ 1885 0694 98060000 		.4byte	0x698
+ 1886 0698 1F       		.uleb128 0x1f
+ 1887 0699 78060000 		.4byte	0x678
+ 1888 069d 1E       		.uleb128 0x1e
+ 1889 069e 7E040000 		.4byte	.LASF86
+ 1890 06a2 01       		.byte	0x1
+ 1891 06a3 16       		.byte	0x16
+ 1892 06a4 A8060000 		.4byte	0x6a8
+ 1893 06a8 06       		.uleb128 0x6
+ 1894 06a9 8C000000 		.4byte	0x8c
+ 1895 06ad 1E       		.uleb128 0x1e
+ 1896 06ae 15060000 		.4byte	.LASF87
+ 1897 06b2 01       		.byte	0x1
+ 1898 06b3 17       		.byte	0x17
+ 1899 06b4 B8060000 		.4byte	0x6b8
+ 1900 06b8 06       		.uleb128 0x6
+ 1901 06b9 C5000000 		.4byte	0xc5
+ 1902 06bd 1E       		.uleb128 0x1e
+ 1903 06be 25010000 		.4byte	.LASF88
+ 1904 06c2 01       		.byte	0x1
+ 1905 06c3 18       		.byte	0x18
+ 1906 06c4 C8060000 		.4byte	0x6c8
+ 1907 06c8 06       		.uleb128 0x6
+ 1908 06c9 7E000000 		.4byte	0x7e
+ 1909 06cd 1E       		.uleb128 0x1e
+ 1910 06ce 98040000 		.4byte	.LASF89
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 40
+
+
+ 1911 06d2 01       		.byte	0x1
+ 1912 06d3 19       		.byte	0x19
+ 1913 06d4 C8060000 		.4byte	0x6c8
+ 1914 06d8 20       		.uleb128 0x20
+ 1915 06d9 CD020000 		.4byte	.LASF90
+ 1916 06dd 01       		.byte	0x1
+ 1917 06de 1B       		.byte	0x1b
+ 1918 06df A8060000 		.4byte	0x6a8
+ 1919 06e3 05       		.uleb128 0x5
+ 1920 06e4 03       		.byte	0x3
+ 1921 06e5 00000000 		.4byte	CAPACITOR_VOLT
+ 1922 06e9 20       		.uleb128 0x20
+ 1923 06ea 44000000 		.4byte	.LASF91
+ 1924 06ee 01       		.byte	0x1
+ 1925 06ef 1C       		.byte	0x1c
+ 1926 06f0 A8060000 		.4byte	0x6a8
+ 1927 06f4 05       		.uleb128 0x5
+ 1928 06f5 03       		.byte	0x3
+ 1929 06f6 00000000 		.4byte	CURTIS_FAULT_CHECK
+ 1930 06fa 20       		.uleb128 0x20
+ 1931 06fb E9030000 		.4byte	.LASF92
+ 1932 06ff 01       		.byte	0x1
+ 1933 0700 1D       		.byte	0x1d
+ 1934 0701 A8060000 		.4byte	0x6a8
+ 1935 0705 05       		.uleb128 0x5
+ 1936 0706 03       		.byte	0x3
+ 1937 0707 00000000 		.4byte	CURTIS_HEART_BEAT_CHECK
+ 1938 070b 20       		.uleb128 0x20
+ 1939 070c 3D000000 		.4byte	.LASF93
+ 1940 0710 01       		.byte	0x1
+ 1941 0711 1E       		.byte	0x1e
+ 1942 0712 A8060000 		.4byte	0x6a8
+ 1943 0716 05       		.uleb128 0x5
+ 1944 0717 03       		.byte	0x3
+ 1945 0718 00000000 		.4byte	ACK_RX
+ 1946 071c 20       		.uleb128 0x20
+ 1947 071d C6050000 		.4byte	.LASF94
+ 1948 0721 01       		.byte	0x1
+ 1949 0722 1F       		.byte	0x1f
+ 1950 0723 A8060000 		.4byte	0x6a8
+ 1951 0727 05       		.uleb128 0x5
+ 1952 0728 03       		.byte	0x3
+ 1953 0729 00000000 		.4byte	ERROR_TOLERANCE
+ 1954 072d 20       		.uleb128 0x20
+ 1955 072e B8050000 		.4byte	.LASF95
+ 1956 0732 01       		.byte	0x1
+ 1957 0733 20       		.byte	0x20
+ 1958 0734 A8060000 		.4byte	0x6a8
+ 1959 0738 05       		.uleb128 0x5
+ 1960 0739 03       		.byte	0x3
+ 1961 073a 00000000 		.4byte	ABS_MOTOR_RPM
+ 1962 073e 20       		.uleb128 0x20
+ 1963 073f FD010000 		.4byte	.LASF96
+ 1964 0743 01       		.byte	0x1
+ 1965 0744 21       		.byte	0x21
+ 1966 0745 A8060000 		.4byte	0x6a8
+ 1967 0749 05       		.uleb128 0x5
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 41
+
+
+ 1968 074a 03       		.byte	0x3
+ 1969 074b 00000000 		.4byte	THROTTLE_HIGH
+ 1970 074f 20       		.uleb128 0x20
+ 1971 0750 87020000 		.4byte	.LASF97
+ 1972 0754 01       		.byte	0x1
+ 1973 0755 22       		.byte	0x22
+ 1974 0756 A8060000 		.4byte	0x6a8
+ 1975 075a 05       		.uleb128 0x5
+ 1976 075b 03       		.byte	0x3
+ 1977 075c 00000000 		.4byte	THROTTLE_LOW
+ 1978 0760 20       		.uleb128 0x20
+ 1979 0761 81050000 		.4byte	.LASF98
+ 1980 0765 01       		.byte	0x1
+ 1981 0766 24       		.byte	0x24
+ 1982 0767 A8060000 		.4byte	0x6a8
+ 1983 076b 05       		.uleb128 0x5
+ 1984 076c 03       		.byte	0x3
+ 1985 076d 00000000 		.4byte	VOLT_B1
+ 1986 0771 20       		.uleb128 0x20
+ 1987 0772 89050000 		.4byte	.LASF99
+ 1988 0776 01       		.byte	0x1
+ 1989 0777 25       		.byte	0x25
+ 1990 0778 A8060000 		.4byte	0x6a8
+ 1991 077c 05       		.uleb128 0x5
+ 1992 077d 03       		.byte	0x3
+ 1993 077e 00000000 		.4byte	VOLT_B2
+ 1994 0782 20       		.uleb128 0x20
+ 1995 0783 91050000 		.4byte	.LASF100
+ 1996 0787 01       		.byte	0x1
+ 1997 0788 26       		.byte	0x26
+ 1998 0789 A8060000 		.4byte	0x6a8
+ 1999 078d 05       		.uleb128 0x5
+ 2000 078e 03       		.byte	0x3
+ 2001 078f 00000000 		.4byte	VOLT_B3
+ 2002 0793 20       		.uleb128 0x20
+ 2003 0794 99050000 		.4byte	.LASF101
+ 2004 0798 01       		.byte	0x1
+ 2005 0799 27       		.byte	0x27
+ 2006 079a A8060000 		.4byte	0x6a8
+ 2007 079e 05       		.uleb128 0x5
+ 2008 079f 03       		.byte	0x3
+ 2009 07a0 00000000 		.4byte	VOLT_B4
+ 2010 07a4 1E       		.uleb128 0x1e
+ 2011 07a5 9D020000 		.4byte	.LASF102
+ 2012 07a9 01       		.byte	0x1
+ 2013 07aa 28       		.byte	0x28
+ 2014 07ab 85020000 		.4byte	0x285
+ 2015 07af 1E       		.uleb128 0x1e
+ 2016 07b0 CC040000 		.4byte	.LASF103
+ 2017 07b4 01       		.byte	0x1
+ 2018 07b5 29       		.byte	0x29
+ 2019 07b6 BA070000 		.4byte	0x7ba
+ 2020 07ba 06       		.uleb128 0x6
+ 2021 07bb 05030000 		.4byte	0x305
+ 2022 07bf 09       		.uleb128 0x9
+ 2023 07c0 AD000000 		.4byte	0xad
+ 2024 07c4 CF070000 		.4byte	0x7cf
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 42
+
+
+ 2025 07c8 0A       		.uleb128 0xa
+ 2026 07c9 0F010000 		.4byte	0x10f
+ 2027 07cd 03       		.byte	0x3
+ 2028 07ce 00       		.byte	0
+ 2029 07cf 20       		.uleb128 0x20
+ 2030 07d0 0B020000 		.4byte	.LASF104
+ 2031 07d4 01       		.byte	0x1
+ 2032 07d5 2C       		.byte	0x2c
+ 2033 07d6 BF070000 		.4byte	0x7bf
+ 2034 07da 05       		.uleb128 0x5
+ 2035 07db 03       		.byte	0x3
+ 2036 07dc 00000000 		.4byte	current_bytes
+ 2037 07e0 21       		.uleb128 0x21
+ 2038 07e1 30050000 		.4byte	.LASF105
+ 2039 07e5 30050000 		.4byte	.LASF105
+ 2040 07e9 05       		.byte	0x5
+ 2041 07ea 1801     		.2byte	0x118
+ 2042 07ec 22       		.uleb128 0x22
+ 2043 07ed D6050000 		.4byte	.LASF106
+ 2044 07f1 D6050000 		.4byte	.LASF106
+ 2045 07f5 07       		.byte	0x7
+ 2046 07f6 EC       		.byte	0xec
+ 2047 07f7 23       		.uleb128 0x23
+ 2048 07f8 5F050000 		.4byte	.LASF112
+ 2049 07fc 5F050000 		.4byte	.LASF112
+ 2050 0800 22       		.uleb128 0x22
+ 2051 0801 A1050000 		.4byte	.LASF107
+ 2052 0805 A1050000 		.4byte	.LASF107
+ 2053 0809 07       		.byte	0x7
+ 2054 080a F8       		.byte	0xf8
+ 2055 080b 22       		.uleb128 0x22
+ 2056 080c 60000000 		.4byte	.LASF108
+ 2057 0810 60000000 		.4byte	.LASF108
+ 2058 0814 07       		.byte	0x7
+ 2059 0815 F9       		.byte	0xf9
+ 2060 0816 00       		.byte	0
+ 2061              		.section	.debug_abbrev,"",%progbits
+ 2062              	.Ldebug_abbrev0:
+ 2063 0000 01       		.uleb128 0x1
+ 2064 0001 11       		.uleb128 0x11
+ 2065 0002 01       		.byte	0x1
+ 2066 0003 25       		.uleb128 0x25
+ 2067 0004 0E       		.uleb128 0xe
+ 2068 0005 13       		.uleb128 0x13
+ 2069 0006 0B       		.uleb128 0xb
+ 2070 0007 03       		.uleb128 0x3
+ 2071 0008 0E       		.uleb128 0xe
+ 2072 0009 1B       		.uleb128 0x1b
+ 2073 000a 0E       		.uleb128 0xe
+ 2074 000b 55       		.uleb128 0x55
+ 2075 000c 17       		.uleb128 0x17
+ 2076 000d 11       		.uleb128 0x11
+ 2077 000e 01       		.uleb128 0x1
+ 2078 000f 10       		.uleb128 0x10
+ 2079 0010 17       		.uleb128 0x17
+ 2080 0011 00       		.byte	0
+ 2081 0012 00       		.byte	0
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 43
+
+
+ 2082 0013 02       		.uleb128 0x2
+ 2083 0014 24       		.uleb128 0x24
+ 2084 0015 00       		.byte	0
+ 2085 0016 0B       		.uleb128 0xb
+ 2086 0017 0B       		.uleb128 0xb
+ 2087 0018 3E       		.uleb128 0x3e
+ 2088 0019 0B       		.uleb128 0xb
+ 2089 001a 03       		.uleb128 0x3
+ 2090 001b 0E       		.uleb128 0xe
+ 2091 001c 00       		.byte	0
+ 2092 001d 00       		.byte	0
+ 2093 001e 03       		.uleb128 0x3
+ 2094 001f 16       		.uleb128 0x16
+ 2095 0020 00       		.byte	0
+ 2096 0021 03       		.uleb128 0x3
+ 2097 0022 0E       		.uleb128 0xe
+ 2098 0023 3A       		.uleb128 0x3a
+ 2099 0024 0B       		.uleb128 0xb
+ 2100 0025 3B       		.uleb128 0x3b
+ 2101 0026 0B       		.uleb128 0xb
+ 2102 0027 49       		.uleb128 0x49
+ 2103 0028 13       		.uleb128 0x13
+ 2104 0029 00       		.byte	0
+ 2105 002a 00       		.byte	0
+ 2106 002b 04       		.uleb128 0x4
+ 2107 002c 24       		.uleb128 0x24
+ 2108 002d 00       		.byte	0
+ 2109 002e 0B       		.uleb128 0xb
+ 2110 002f 0B       		.uleb128 0xb
+ 2111 0030 3E       		.uleb128 0x3e
+ 2112 0031 0B       		.uleb128 0xb
+ 2113 0032 03       		.uleb128 0x3
+ 2114 0033 08       		.uleb128 0x8
+ 2115 0034 00       		.byte	0
+ 2116 0035 00       		.byte	0
+ 2117 0036 05       		.uleb128 0x5
+ 2118 0037 16       		.uleb128 0x16
+ 2119 0038 00       		.byte	0
+ 2120 0039 03       		.uleb128 0x3
+ 2121 003a 0E       		.uleb128 0xe
+ 2122 003b 3A       		.uleb128 0x3a
+ 2123 003c 0B       		.uleb128 0xb
+ 2124 003d 3B       		.uleb128 0x3b
+ 2125 003e 05       		.uleb128 0x5
+ 2126 003f 49       		.uleb128 0x49
+ 2127 0040 13       		.uleb128 0x13
+ 2128 0041 00       		.byte	0
+ 2129 0042 00       		.byte	0
+ 2130 0043 06       		.uleb128 0x6
+ 2131 0044 35       		.uleb128 0x35
+ 2132 0045 00       		.byte	0
+ 2133 0046 49       		.uleb128 0x49
+ 2134 0047 13       		.uleb128 0x13
+ 2135 0048 00       		.byte	0
+ 2136 0049 00       		.byte	0
+ 2137 004a 07       		.uleb128 0x7
+ 2138 004b 13       		.uleb128 0x13
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 44
+
+
+ 2139 004c 01       		.byte	0x1
+ 2140 004d 0B       		.uleb128 0xb
+ 2141 004e 0B       		.uleb128 0xb
+ 2142 004f 3A       		.uleb128 0x3a
+ 2143 0050 0B       		.uleb128 0xb
+ 2144 0051 3B       		.uleb128 0x3b
+ 2145 0052 0B       		.uleb128 0xb
+ 2146 0053 01       		.uleb128 0x1
+ 2147 0054 13       		.uleb128 0x13
+ 2148 0055 00       		.byte	0
+ 2149 0056 00       		.byte	0
+ 2150 0057 08       		.uleb128 0x8
+ 2151 0058 0D       		.uleb128 0xd
+ 2152 0059 00       		.byte	0
+ 2153 005a 03       		.uleb128 0x3
+ 2154 005b 0E       		.uleb128 0xe
+ 2155 005c 3A       		.uleb128 0x3a
+ 2156 005d 0B       		.uleb128 0xb
+ 2157 005e 3B       		.uleb128 0x3b
+ 2158 005f 0B       		.uleb128 0xb
+ 2159 0060 49       		.uleb128 0x49
+ 2160 0061 13       		.uleb128 0x13
+ 2161 0062 38       		.uleb128 0x38
+ 2162 0063 0B       		.uleb128 0xb
+ 2163 0064 00       		.byte	0
+ 2164 0065 00       		.byte	0
+ 2165 0066 09       		.uleb128 0x9
+ 2166 0067 01       		.uleb128 0x1
+ 2167 0068 01       		.byte	0x1
+ 2168 0069 49       		.uleb128 0x49
+ 2169 006a 13       		.uleb128 0x13
+ 2170 006b 01       		.uleb128 0x1
+ 2171 006c 13       		.uleb128 0x13
+ 2172 006d 00       		.byte	0
+ 2173 006e 00       		.byte	0
+ 2174 006f 0A       		.uleb128 0xa
+ 2175 0070 21       		.uleb128 0x21
+ 2176 0071 00       		.byte	0
+ 2177 0072 49       		.uleb128 0x49
+ 2178 0073 13       		.uleb128 0x13
+ 2179 0074 2F       		.uleb128 0x2f
+ 2180 0075 0B       		.uleb128 0xb
+ 2181 0076 00       		.byte	0
+ 2182 0077 00       		.byte	0
+ 2183 0078 0B       		.uleb128 0xb
+ 2184 0079 0D       		.uleb128 0xd
+ 2185 007a 00       		.byte	0
+ 2186 007b 03       		.uleb128 0x3
+ 2187 007c 08       		.uleb128 0x8
+ 2188 007d 3A       		.uleb128 0x3a
+ 2189 007e 0B       		.uleb128 0xb
+ 2190 007f 3B       		.uleb128 0x3b
+ 2191 0080 0B       		.uleb128 0xb
+ 2192 0081 49       		.uleb128 0x49
+ 2193 0082 13       		.uleb128 0x13
+ 2194 0083 38       		.uleb128 0x38
+ 2195 0084 0B       		.uleb128 0xb
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 45
+
+
+ 2196 0085 00       		.byte	0
+ 2197 0086 00       		.byte	0
+ 2198 0087 0C       		.uleb128 0xc
+ 2199 0088 0F       		.uleb128 0xf
+ 2200 0089 00       		.byte	0
+ 2201 008a 0B       		.uleb128 0xb
+ 2202 008b 0B       		.uleb128 0xb
+ 2203 008c 49       		.uleb128 0x49
+ 2204 008d 13       		.uleb128 0x13
+ 2205 008e 00       		.byte	0
+ 2206 008f 00       		.byte	0
+ 2207 0090 0D       		.uleb128 0xd
+ 2208 0091 04       		.uleb128 0x4
+ 2209 0092 01       		.byte	0x1
+ 2210 0093 0B       		.uleb128 0xb
+ 2211 0094 0B       		.uleb128 0xb
+ 2212 0095 49       		.uleb128 0x49
+ 2213 0096 13       		.uleb128 0x13
+ 2214 0097 3A       		.uleb128 0x3a
+ 2215 0098 0B       		.uleb128 0xb
+ 2216 0099 3B       		.uleb128 0x3b
+ 2217 009a 0B       		.uleb128 0xb
+ 2218 009b 01       		.uleb128 0x1
+ 2219 009c 13       		.uleb128 0x13
+ 2220 009d 00       		.byte	0
+ 2221 009e 00       		.byte	0
+ 2222 009f 0E       		.uleb128 0xe
+ 2223 00a0 28       		.uleb128 0x28
+ 2224 00a1 00       		.byte	0
+ 2225 00a2 03       		.uleb128 0x3
+ 2226 00a3 0E       		.uleb128 0xe
+ 2227 00a4 1C       		.uleb128 0x1c
+ 2228 00a5 0B       		.uleb128 0xb
+ 2229 00a6 00       		.byte	0
+ 2230 00a7 00       		.byte	0
+ 2231 00a8 0F       		.uleb128 0xf
+ 2232 00a9 28       		.uleb128 0x28
+ 2233 00aa 00       		.byte	0
+ 2234 00ab 03       		.uleb128 0x3
+ 2235 00ac 0E       		.uleb128 0xe
+ 2236 00ad 1C       		.uleb128 0x1c
+ 2237 00ae 05       		.uleb128 0x5
+ 2238 00af 00       		.byte	0
+ 2239 00b0 00       		.byte	0
+ 2240 00b1 10       		.uleb128 0x10
+ 2241 00b2 2E       		.uleb128 0x2e
+ 2242 00b3 00       		.byte	0
+ 2243 00b4 3F       		.uleb128 0x3f
+ 2244 00b5 19       		.uleb128 0x19
+ 2245 00b6 03       		.uleb128 0x3
+ 2246 00b7 0E       		.uleb128 0xe
+ 2247 00b8 3A       		.uleb128 0x3a
+ 2248 00b9 0B       		.uleb128 0xb
+ 2249 00ba 3B       		.uleb128 0x3b
+ 2250 00bb 0B       		.uleb128 0xb
+ 2251 00bc 49       		.uleb128 0x49
+ 2252 00bd 13       		.uleb128 0x13
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 46
+
+
+ 2253 00be 11       		.uleb128 0x11
+ 2254 00bf 01       		.uleb128 0x1
+ 2255 00c0 12       		.uleb128 0x12
+ 2256 00c1 06       		.uleb128 0x6
+ 2257 00c2 40       		.uleb128 0x40
+ 2258 00c3 18       		.uleb128 0x18
+ 2259 00c4 9742     		.uleb128 0x2117
+ 2260 00c6 19       		.uleb128 0x19
+ 2261 00c7 00       		.byte	0
+ 2262 00c8 00       		.byte	0
+ 2263 00c9 11       		.uleb128 0x11
+ 2264 00ca 2E       		.uleb128 0x2e
+ 2265 00cb 01       		.byte	0x1
+ 2266 00cc 3F       		.uleb128 0x3f
+ 2267 00cd 19       		.uleb128 0x19
+ 2268 00ce 03       		.uleb128 0x3
+ 2269 00cf 0E       		.uleb128 0xe
+ 2270 00d0 3A       		.uleb128 0x3a
+ 2271 00d1 0B       		.uleb128 0xb
+ 2272 00d2 3B       		.uleb128 0x3b
+ 2273 00d3 0B       		.uleb128 0xb
+ 2274 00d4 11       		.uleb128 0x11
+ 2275 00d5 01       		.uleb128 0x1
+ 2276 00d6 12       		.uleb128 0x12
+ 2277 00d7 06       		.uleb128 0x6
+ 2278 00d8 40       		.uleb128 0x40
+ 2279 00d9 18       		.uleb128 0x18
+ 2280 00da 9742     		.uleb128 0x2117
+ 2281 00dc 19       		.uleb128 0x19
+ 2282 00dd 01       		.uleb128 0x1
+ 2283 00de 13       		.uleb128 0x13
+ 2284 00df 00       		.byte	0
+ 2285 00e0 00       		.byte	0
+ 2286 00e1 12       		.uleb128 0x12
+ 2287 00e2 34       		.uleb128 0x34
+ 2288 00e3 00       		.byte	0
+ 2289 00e4 03       		.uleb128 0x3
+ 2290 00e5 0E       		.uleb128 0xe
+ 2291 00e6 3A       		.uleb128 0x3a
+ 2292 00e7 0B       		.uleb128 0xb
+ 2293 00e8 3B       		.uleb128 0x3b
+ 2294 00e9 0B       		.uleb128 0xb
+ 2295 00ea 49       		.uleb128 0x49
+ 2296 00eb 13       		.uleb128 0x13
+ 2297 00ec 02       		.uleb128 0x2
+ 2298 00ed 18       		.uleb128 0x18
+ 2299 00ee 00       		.byte	0
+ 2300 00ef 00       		.byte	0
+ 2301 00f0 13       		.uleb128 0x13
+ 2302 00f1 898201   		.uleb128 0x4109
+ 2303 00f4 01       		.byte	0x1
+ 2304 00f5 11       		.uleb128 0x11
+ 2305 00f6 01       		.uleb128 0x1
+ 2306 00f7 31       		.uleb128 0x31
+ 2307 00f8 13       		.uleb128 0x13
+ 2308 00f9 00       		.byte	0
+ 2309 00fa 00       		.byte	0
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 47
+
+
+ 2310 00fb 14       		.uleb128 0x14
+ 2311 00fc 8A8201   		.uleb128 0x410a
+ 2312 00ff 00       		.byte	0
+ 2313 0100 02       		.uleb128 0x2
+ 2314 0101 18       		.uleb128 0x18
+ 2315 0102 9142     		.uleb128 0x2111
+ 2316 0104 18       		.uleb128 0x18
+ 2317 0105 00       		.byte	0
+ 2318 0106 00       		.byte	0
+ 2319 0107 15       		.uleb128 0x15
+ 2320 0108 2E       		.uleb128 0x2e
+ 2321 0109 01       		.byte	0x1
+ 2322 010a 3F       		.uleb128 0x3f
+ 2323 010b 19       		.uleb128 0x19
+ 2324 010c 03       		.uleb128 0x3
+ 2325 010d 0E       		.uleb128 0xe
+ 2326 010e 3A       		.uleb128 0x3a
+ 2327 010f 0B       		.uleb128 0xb
+ 2328 0110 3B       		.uleb128 0x3b
+ 2329 0111 0B       		.uleb128 0xb
+ 2330 0112 27       		.uleb128 0x27
+ 2331 0113 19       		.uleb128 0x19
+ 2332 0114 11       		.uleb128 0x11
+ 2333 0115 01       		.uleb128 0x1
+ 2334 0116 12       		.uleb128 0x12
+ 2335 0117 06       		.uleb128 0x6
+ 2336 0118 40       		.uleb128 0x40
+ 2337 0119 18       		.uleb128 0x18
+ 2338 011a 9742     		.uleb128 0x2117
+ 2339 011c 19       		.uleb128 0x19
+ 2340 011d 01       		.uleb128 0x1
+ 2341 011e 13       		.uleb128 0x13
+ 2342 011f 00       		.byte	0
+ 2343 0120 00       		.byte	0
+ 2344 0121 16       		.uleb128 0x16
+ 2345 0122 05       		.uleb128 0x5
+ 2346 0123 00       		.byte	0
+ 2347 0124 03       		.uleb128 0x3
+ 2348 0125 0E       		.uleb128 0xe
+ 2349 0126 3A       		.uleb128 0x3a
+ 2350 0127 0B       		.uleb128 0xb
+ 2351 0128 3B       		.uleb128 0x3b
+ 2352 0129 0B       		.uleb128 0xb
+ 2353 012a 49       		.uleb128 0x49
+ 2354 012b 13       		.uleb128 0x13
+ 2355 012c 02       		.uleb128 0x2
+ 2356 012d 17       		.uleb128 0x17
+ 2357 012e 00       		.byte	0
+ 2358 012f 00       		.byte	0
+ 2359 0130 17       		.uleb128 0x17
+ 2360 0131 05       		.uleb128 0x5
+ 2361 0132 00       		.byte	0
+ 2362 0133 03       		.uleb128 0x3
+ 2363 0134 08       		.uleb128 0x8
+ 2364 0135 3A       		.uleb128 0x3a
+ 2365 0136 0B       		.uleb128 0xb
+ 2366 0137 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 48
+
+
+ 2367 0138 0B       		.uleb128 0xb
+ 2368 0139 49       		.uleb128 0x49
+ 2369 013a 13       		.uleb128 0x13
+ 2370 013b 02       		.uleb128 0x2
+ 2371 013c 17       		.uleb128 0x17
+ 2372 013d 00       		.byte	0
+ 2373 013e 00       		.byte	0
+ 2374 013f 18       		.uleb128 0x18
+ 2375 0140 34       		.uleb128 0x34
+ 2376 0141 00       		.byte	0
+ 2377 0142 03       		.uleb128 0x3
+ 2378 0143 08       		.uleb128 0x8
+ 2379 0144 3A       		.uleb128 0x3a
+ 2380 0145 0B       		.uleb128 0xb
+ 2381 0146 3B       		.uleb128 0x3b
+ 2382 0147 0B       		.uleb128 0xb
+ 2383 0148 49       		.uleb128 0x49
+ 2384 0149 13       		.uleb128 0x13
+ 2385 014a 02       		.uleb128 0x2
+ 2386 014b 17       		.uleb128 0x17
+ 2387 014c 00       		.byte	0
+ 2388 014d 00       		.byte	0
+ 2389 014e 19       		.uleb128 0x19
+ 2390 014f 898201   		.uleb128 0x4109
+ 2391 0152 01       		.byte	0x1
+ 2392 0153 11       		.uleb128 0x11
+ 2393 0154 01       		.uleb128 0x1
+ 2394 0155 31       		.uleb128 0x31
+ 2395 0156 13       		.uleb128 0x13
+ 2396 0157 01       		.uleb128 0x1
+ 2397 0158 13       		.uleb128 0x13
+ 2398 0159 00       		.byte	0
+ 2399 015a 00       		.byte	0
+ 2400 015b 1A       		.uleb128 0x1a
+ 2401 015c 2E       		.uleb128 0x2e
+ 2402 015d 01       		.byte	0x1
+ 2403 015e 3F       		.uleb128 0x3f
+ 2404 015f 19       		.uleb128 0x19
+ 2405 0160 03       		.uleb128 0x3
+ 2406 0161 0E       		.uleb128 0xe
+ 2407 0162 3A       		.uleb128 0x3a
+ 2408 0163 0B       		.uleb128 0xb
+ 2409 0164 3B       		.uleb128 0x3b
+ 2410 0165 05       		.uleb128 0x5
+ 2411 0166 11       		.uleb128 0x11
+ 2412 0167 01       		.uleb128 0x1
+ 2413 0168 12       		.uleb128 0x12
+ 2414 0169 06       		.uleb128 0x6
+ 2415 016a 40       		.uleb128 0x40
+ 2416 016b 18       		.uleb128 0x18
+ 2417 016c 9642     		.uleb128 0x2116
+ 2418 016e 19       		.uleb128 0x19
+ 2419 016f 01       		.uleb128 0x1
+ 2420 0170 13       		.uleb128 0x13
+ 2421 0171 00       		.byte	0
+ 2422 0172 00       		.byte	0
+ 2423 0173 1B       		.uleb128 0x1b
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 49
+
+
+ 2424 0174 34       		.uleb128 0x34
+ 2425 0175 00       		.byte	0
+ 2426 0176 03       		.uleb128 0x3
+ 2427 0177 08       		.uleb128 0x8
+ 2428 0178 3A       		.uleb128 0x3a
+ 2429 0179 0B       		.uleb128 0xb
+ 2430 017a 3B       		.uleb128 0x3b
+ 2431 017b 05       		.uleb128 0x5
+ 2432 017c 49       		.uleb128 0x49
+ 2433 017d 13       		.uleb128 0x13
+ 2434 017e 02       		.uleb128 0x2
+ 2435 017f 17       		.uleb128 0x17
+ 2436 0180 00       		.byte	0
+ 2437 0181 00       		.byte	0
+ 2438 0182 1C       		.uleb128 0x1c
+ 2439 0183 34       		.uleb128 0x34
+ 2440 0184 00       		.byte	0
+ 2441 0185 03       		.uleb128 0x3
+ 2442 0186 0E       		.uleb128 0xe
+ 2443 0187 3A       		.uleb128 0x3a
+ 2444 0188 0B       		.uleb128 0xb
+ 2445 0189 3B       		.uleb128 0x3b
+ 2446 018a 0B       		.uleb128 0xb
+ 2447 018b 49       		.uleb128 0x49
+ 2448 018c 13       		.uleb128 0x13
+ 2449 018d 02       		.uleb128 0x2
+ 2450 018e 17       		.uleb128 0x17
+ 2451 018f 00       		.byte	0
+ 2452 0190 00       		.byte	0
+ 2453 0191 1D       		.uleb128 0x1d
+ 2454 0192 898201   		.uleb128 0x4109
+ 2455 0195 00       		.byte	0
+ 2456 0196 11       		.uleb128 0x11
+ 2457 0197 01       		.uleb128 0x1
+ 2458 0198 31       		.uleb128 0x31
+ 2459 0199 13       		.uleb128 0x13
+ 2460 019a 00       		.byte	0
+ 2461 019b 00       		.byte	0
+ 2462 019c 1E       		.uleb128 0x1e
+ 2463 019d 34       		.uleb128 0x34
+ 2464 019e 00       		.byte	0
+ 2465 019f 03       		.uleb128 0x3
+ 2466 01a0 0E       		.uleb128 0xe
+ 2467 01a1 3A       		.uleb128 0x3a
+ 2468 01a2 0B       		.uleb128 0xb
+ 2469 01a3 3B       		.uleb128 0x3b
+ 2470 01a4 0B       		.uleb128 0xb
+ 2471 01a5 49       		.uleb128 0x49
+ 2472 01a6 13       		.uleb128 0x13
+ 2473 01a7 3F       		.uleb128 0x3f
+ 2474 01a8 19       		.uleb128 0x19
+ 2475 01a9 3C       		.uleb128 0x3c
+ 2476 01aa 19       		.uleb128 0x19
+ 2477 01ab 00       		.byte	0
+ 2478 01ac 00       		.byte	0
+ 2479 01ad 1F       		.uleb128 0x1f
+ 2480 01ae 26       		.uleb128 0x26
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 50
+
+
+ 2481 01af 00       		.byte	0
+ 2482 01b0 49       		.uleb128 0x49
+ 2483 01b1 13       		.uleb128 0x13
+ 2484 01b2 00       		.byte	0
+ 2485 01b3 00       		.byte	0
+ 2486 01b4 20       		.uleb128 0x20
+ 2487 01b5 34       		.uleb128 0x34
+ 2488 01b6 00       		.byte	0
+ 2489 01b7 03       		.uleb128 0x3
+ 2490 01b8 0E       		.uleb128 0xe
+ 2491 01b9 3A       		.uleb128 0x3a
+ 2492 01ba 0B       		.uleb128 0xb
+ 2493 01bb 3B       		.uleb128 0x3b
+ 2494 01bc 0B       		.uleb128 0xb
+ 2495 01bd 49       		.uleb128 0x49
+ 2496 01be 13       		.uleb128 0x13
+ 2497 01bf 3F       		.uleb128 0x3f
+ 2498 01c0 19       		.uleb128 0x19
+ 2499 01c1 02       		.uleb128 0x2
+ 2500 01c2 18       		.uleb128 0x18
+ 2501 01c3 00       		.byte	0
+ 2502 01c4 00       		.byte	0
+ 2503 01c5 21       		.uleb128 0x21
+ 2504 01c6 2E       		.uleb128 0x2e
+ 2505 01c7 00       		.byte	0
+ 2506 01c8 3F       		.uleb128 0x3f
+ 2507 01c9 19       		.uleb128 0x19
+ 2508 01ca 3C       		.uleb128 0x3c
+ 2509 01cb 19       		.uleb128 0x19
+ 2510 01cc 6E       		.uleb128 0x6e
+ 2511 01cd 0E       		.uleb128 0xe
+ 2512 01ce 03       		.uleb128 0x3
+ 2513 01cf 0E       		.uleb128 0xe
+ 2514 01d0 3A       		.uleb128 0x3a
+ 2515 01d1 0B       		.uleb128 0xb
+ 2516 01d2 3B       		.uleb128 0x3b
+ 2517 01d3 05       		.uleb128 0x5
+ 2518 01d4 00       		.byte	0
+ 2519 01d5 00       		.byte	0
+ 2520 01d6 22       		.uleb128 0x22
+ 2521 01d7 2E       		.uleb128 0x2e
+ 2522 01d8 00       		.byte	0
+ 2523 01d9 3F       		.uleb128 0x3f
+ 2524 01da 19       		.uleb128 0x19
+ 2525 01db 3C       		.uleb128 0x3c
+ 2526 01dc 19       		.uleb128 0x19
+ 2527 01dd 6E       		.uleb128 0x6e
+ 2528 01de 0E       		.uleb128 0xe
+ 2529 01df 03       		.uleb128 0x3
+ 2530 01e0 0E       		.uleb128 0xe
+ 2531 01e1 3A       		.uleb128 0x3a
+ 2532 01e2 0B       		.uleb128 0xb
+ 2533 01e3 3B       		.uleb128 0x3b
+ 2534 01e4 0B       		.uleb128 0xb
+ 2535 01e5 00       		.byte	0
+ 2536 01e6 00       		.byte	0
+ 2537 01e7 23       		.uleb128 0x23
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 51
+
+
+ 2538 01e8 2E       		.uleb128 0x2e
+ 2539 01e9 00       		.byte	0
+ 2540 01ea 3F       		.uleb128 0x3f
+ 2541 01eb 19       		.uleb128 0x19
+ 2542 01ec 3C       		.uleb128 0x3c
+ 2543 01ed 19       		.uleb128 0x19
+ 2544 01ee 6E       		.uleb128 0x6e
+ 2545 01ef 0E       		.uleb128 0xe
+ 2546 01f0 03       		.uleb128 0x3
+ 2547 01f1 0E       		.uleb128 0xe
+ 2548 01f2 00       		.byte	0
+ 2549 01f3 00       		.byte	0
+ 2550 01f4 00       		.byte	0
+ 2551              		.section	.debug_loc,"",%progbits
+ 2552              	.Ldebug_loc0:
+ 2553              	.LLST0:
+ 2554 0000 00000000 		.4byte	.LVL1
+ 2555 0004 2C000000 		.4byte	.LVL8
+ 2556 0008 0100     		.2byte	0x1
+ 2557 000a 50       		.byte	0x50
+ 2558 000b 2C000000 		.4byte	.LVL8
+ 2559 000f 34000000 		.4byte	.LFE44
+ 2560 0013 0400     		.2byte	0x4
+ 2561 0015 F3       		.byte	0xf3
+ 2562 0016 01       		.uleb128 0x1
+ 2563 0017 50       		.byte	0x50
+ 2564 0018 9F       		.byte	0x9f
+ 2565 0019 00000000 		.4byte	0
+ 2566 001d 00000000 		.4byte	0
+ 2567              	.LLST1:
+ 2568 0021 00000000 		.4byte	.LVL1
+ 2569 0025 10000000 		.4byte	.LVL2
+ 2570 0029 0100     		.2byte	0x1
+ 2571 002b 51       		.byte	0x51
+ 2572 002c 10000000 		.4byte	.LVL2
+ 2573 0030 1A000000 		.4byte	.LVL4
+ 2574 0034 0200     		.2byte	0x2
+ 2575 0036 73       		.byte	0x73
+ 2576 0037 00       		.sleb128 0
+ 2577 0038 1A000000 		.4byte	.LVL4
+ 2578 003c 2C000000 		.4byte	.LVL8
+ 2579 0040 0200     		.2byte	0x2
+ 2580 0042 91       		.byte	0x91
+ 2581 0043 68       		.sleb128 -24
+ 2582 0044 2C000000 		.4byte	.LVL8
+ 2583 0048 2F000000 		.4byte	.LVL9-1
+ 2584 004c 0200     		.2byte	0x2
+ 2585 004e 70       		.byte	0x70
+ 2586 004f 00       		.sleb128 0
+ 2587 0050 2F000000 		.4byte	.LVL9-1
+ 2588 0054 34000000 		.4byte	.LFE44
+ 2589 0058 0400     		.2byte	0x4
+ 2590 005a F3       		.byte	0xf3
+ 2591 005b 01       		.uleb128 0x1
+ 2592 005c 51       		.byte	0x51
+ 2593 005d 9F       		.byte	0x9f
+ 2594 005e 00000000 		.4byte	0
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 52
+
+
+ 2595 0062 00000000 		.4byte	0
+ 2596              	.LLST2:
+ 2597 0066 18000000 		.4byte	.LVL3
+ 2598 006a 1C000000 		.4byte	.LVL5
+ 2599 006e 0200     		.2byte	0x2
+ 2600 0070 30       		.byte	0x30
+ 2601 0071 9F       		.byte	0x9f
+ 2602 0072 1C000000 		.4byte	.LVL5
+ 2603 0076 24000000 		.4byte	.LVL6
+ 2604 007a 0100     		.2byte	0x1
+ 2605 007c 53       		.byte	0x53
+ 2606 007d 26000000 		.4byte	.LVL7
+ 2607 0081 2F000000 		.4byte	.LVL9-1
+ 2608 0085 0100     		.2byte	0x1
+ 2609 0087 53       		.byte	0x53
+ 2610 0088 00000000 		.4byte	0
+ 2611 008c 00000000 		.4byte	0
+ 2612              	.LLST3:
+ 2613 0090 00000000 		.4byte	.LVL10
+ 2614 0094 1E000000 		.4byte	.LVL12
+ 2615 0098 0100     		.2byte	0x1
+ 2616 009a 50       		.byte	0x50
+ 2617 009b 1E000000 		.4byte	.LVL12
+ 2618 009f 21000000 		.4byte	.LVL13-1
+ 2619 00a3 0200     		.2byte	0x2
+ 2620 00a5 72       		.byte	0x72
+ 2621 00a6 00       		.sleb128 0
+ 2622 00a7 21000000 		.4byte	.LVL13-1
+ 2623 00ab 2C000000 		.4byte	.LFE45
+ 2624 00af 0400     		.2byte	0x4
+ 2625 00b1 F3       		.byte	0xf3
+ 2626 00b2 01       		.uleb128 0x1
+ 2627 00b3 50       		.byte	0x50
+ 2628 00b4 9F       		.byte	0x9f
+ 2629 00b5 00000000 		.4byte	0
+ 2630 00b9 00000000 		.4byte	0
+ 2631              	.LLST4:
+ 2632 00bd 00000000 		.4byte	.LVL10
+ 2633 00c1 1C000000 		.4byte	.LVL11
+ 2634 00c5 0100     		.2byte	0x1
+ 2635 00c7 51       		.byte	0x51
+ 2636 00c8 1C000000 		.4byte	.LVL11
+ 2637 00cc 21000000 		.4byte	.LVL13-1
+ 2638 00d0 0200     		.2byte	0x2
+ 2639 00d2 72       		.byte	0x72
+ 2640 00d3 01       		.sleb128 1
+ 2641 00d4 21000000 		.4byte	.LVL13-1
+ 2642 00d8 2C000000 		.4byte	.LFE45
+ 2643 00dc 0400     		.2byte	0x4
+ 2644 00de F3       		.byte	0xf3
+ 2645 00df 01       		.uleb128 0x1
+ 2646 00e0 51       		.byte	0x51
+ 2647 00e1 9F       		.byte	0x9f
+ 2648 00e2 00000000 		.4byte	0
+ 2649 00e6 00000000 		.4byte	0
+ 2650              	.LLST5:
+ 2651 00ea 00000000 		.4byte	.LVL14
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 53
+
+
+ 2652 00ee 1E000000 		.4byte	.LVL17
+ 2653 00f2 0100     		.2byte	0x1
+ 2654 00f4 50       		.byte	0x50
+ 2655 00f5 1E000000 		.4byte	.LVL17
+ 2656 00f9 21000000 		.4byte	.LVL18-1
+ 2657 00fd 0200     		.2byte	0x2
+ 2658 00ff 70       		.byte	0x70
+ 2659 0100 00       		.sleb128 0
+ 2660 0101 21000000 		.4byte	.LVL18-1
+ 2661 0105 30000000 		.4byte	.LFE46
+ 2662 0109 0400     		.2byte	0x4
+ 2663 010b F3       		.byte	0xf3
+ 2664 010c 01       		.uleb128 0x1
+ 2665 010d 50       		.byte	0x50
+ 2666 010e 9F       		.byte	0x9f
+ 2667 010f 00000000 		.4byte	0
+ 2668 0113 00000000 		.4byte	0
+ 2669              	.LLST6:
+ 2670 0117 00000000 		.4byte	.LVL14
+ 2671 011b 1C000000 		.4byte	.LVL16
+ 2672 011f 0100     		.2byte	0x1
+ 2673 0121 51       		.byte	0x51
+ 2674 0122 1C000000 		.4byte	.LVL16
+ 2675 0126 30000000 		.4byte	.LFE46
+ 2676 012a 0400     		.2byte	0x4
+ 2677 012c F3       		.byte	0xf3
+ 2678 012d 01       		.uleb128 0x1
+ 2679 012e 51       		.byte	0x51
+ 2680 012f 9F       		.byte	0x9f
+ 2681 0130 00000000 		.4byte	0
+ 2682 0134 00000000 		.4byte	0
+ 2683              	.LLST7:
+ 2684 0138 00000000 		.4byte	.LVL14
+ 2685 013c 10000000 		.4byte	.LVL15
+ 2686 0140 0100     		.2byte	0x1
+ 2687 0142 52       		.byte	0x52
+ 2688 0143 10000000 		.4byte	.LVL15
+ 2689 0147 30000000 		.4byte	.LFE46
+ 2690 014b 0400     		.2byte	0x4
+ 2691 014d F3       		.byte	0xf3
+ 2692 014e 01       		.uleb128 0x1
+ 2693 014f 52       		.byte	0x52
+ 2694 0150 9F       		.byte	0x9f
+ 2695 0151 00000000 		.4byte	0
+ 2696 0155 00000000 		.4byte	0
+ 2697              	.LLST8:
+ 2698 0159 00000000 		.4byte	.LVL20
+ 2699 015d 0E000000 		.4byte	.LVL22
+ 2700 0161 0100     		.2byte	0x1
+ 2701 0163 50       		.byte	0x50
+ 2702 0164 0E000000 		.4byte	.LVL22
+ 2703 0168 28000000 		.4byte	.LFE47
+ 2704 016c 0400     		.2byte	0x4
+ 2705 016e F3       		.byte	0xf3
+ 2706 016f 01       		.uleb128 0x1
+ 2707 0170 50       		.byte	0x50
+ 2708 0171 9F       		.byte	0x9f
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 54
+
+
+ 2709 0172 00000000 		.4byte	0
+ 2710 0176 00000000 		.4byte	0
+ 2711              	.LLST9:
+ 2712 017a 00000000 		.4byte	.LVL20
+ 2713 017e 0C000000 		.4byte	.LVL21
+ 2714 0182 0100     		.2byte	0x1
+ 2715 0184 51       		.byte	0x51
+ 2716 0185 0C000000 		.4byte	.LVL21
+ 2717 0189 28000000 		.4byte	.LFE47
+ 2718 018d 0400     		.2byte	0x4
+ 2719 018f F3       		.byte	0xf3
+ 2720 0190 01       		.uleb128 0x1
+ 2721 0191 51       		.byte	0x51
+ 2722 0192 9F       		.byte	0x9f
+ 2723 0193 00000000 		.4byte	0
+ 2724 0197 00000000 		.4byte	0
+ 2725              	.LLST10:
+ 2726 019b 06000000 		.4byte	.LVL25
+ 2727 019f 0A000000 		.4byte	.LVL26
+ 2728 01a3 0300     		.2byte	0x3
+ 2729 01a5 73       		.byte	0x73
+ 2730 01a6 4E       		.sleb128 -50
+ 2731 01a7 9F       		.byte	0x9f
+ 2732 01a8 0A000000 		.4byte	.LVL26
+ 2733 01ac 10000000 		.4byte	.LVL27
+ 2734 01b0 0100     		.2byte	0x1
+ 2735 01b2 53       		.byte	0x53
+ 2736 01b3 16000000 		.4byte	.LVL28
+ 2737 01b7 1C000000 		.4byte	.LVL29
+ 2738 01bb 0100     		.2byte	0x1
+ 2739 01bd 53       		.byte	0x53
+ 2740 01be 34000000 		.4byte	.LVL31
+ 2741 01c2 3A000000 		.4byte	.LVL32
+ 2742 01c6 0100     		.2byte	0x1
+ 2743 01c8 53       		.byte	0x53
+ 2744 01c9 00000000 		.4byte	0
+ 2745 01cd 00000000 		.4byte	0
+ 2746              	.LLST11:
+ 2747 01d1 00000000 		.4byte	.LVL34
+ 2748 01d5 0B000000 		.4byte	.LVL35-1
+ 2749 01d9 0100     		.2byte	0x1
+ 2750 01db 50       		.byte	0x50
+ 2751 01dc 0B000000 		.4byte	.LVL35-1
+ 2752 01e0 16010000 		.4byte	.LVL49
+ 2753 01e4 0100     		.2byte	0x1
+ 2754 01e6 56       		.byte	0x56
+ 2755 01e7 16010000 		.4byte	.LVL49
+ 2756 01eb 4A010000 		.4byte	.LVL50
+ 2757 01ef 0400     		.2byte	0x4
+ 2758 01f1 F3       		.byte	0xf3
+ 2759 01f2 01       		.uleb128 0x1
+ 2760 01f3 50       		.byte	0x50
+ 2761 01f4 9F       		.byte	0x9f
+ 2762 01f5 4A010000 		.4byte	.LVL50
+ 2763 01f9 96010000 		.4byte	.LVL55
+ 2764 01fd 0100     		.2byte	0x1
+ 2765 01ff 56       		.byte	0x56
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 55
+
+
+ 2766 0200 96010000 		.4byte	.LVL55
+ 2767 0204 CC010000 		.4byte	.LVL56
+ 2768 0208 0400     		.2byte	0x4
+ 2769 020a F3       		.byte	0xf3
+ 2770 020b 01       		.uleb128 0x1
+ 2771 020c 50       		.byte	0x50
+ 2772 020d 9F       		.byte	0x9f
+ 2773 020e CC010000 		.4byte	.LVL56
+ 2774 0212 F0010000 		.4byte	.LVL58
+ 2775 0216 0100     		.2byte	0x1
+ 2776 0218 56       		.byte	0x56
+ 2777 0219 F0010000 		.4byte	.LVL58
+ 2778 021d 48020000 		.4byte	.LFE42
+ 2779 0221 0400     		.2byte	0x4
+ 2780 0223 F3       		.byte	0xf3
+ 2781 0224 01       		.uleb128 0x1
+ 2782 0225 50       		.byte	0x50
+ 2783 0226 9F       		.byte	0x9f
+ 2784 0227 00000000 		.4byte	0
+ 2785 022b 00000000 		.4byte	0
+ 2786              	.LLST12:
+ 2787 022f 00000000 		.4byte	.LVL34
+ 2788 0233 0B000000 		.4byte	.LVL35-1
+ 2789 0237 0100     		.2byte	0x1
+ 2790 0239 51       		.byte	0x51
+ 2791 023a 0B000000 		.4byte	.LVL35-1
+ 2792 023e 72000000 		.4byte	.LVL40
+ 2793 0242 0100     		.2byte	0x1
+ 2794 0244 54       		.byte	0x54
+ 2795 0245 72000000 		.4byte	.LVL40
+ 2796 0249 90000000 		.4byte	.LVL41
+ 2797 024d 0400     		.2byte	0x4
+ 2798 024f F3       		.byte	0xf3
+ 2799 0250 01       		.uleb128 0x1
+ 2800 0251 51       		.byte	0x51
+ 2801 0252 9F       		.byte	0x9f
+ 2802 0253 90000000 		.4byte	.LVL41
+ 2803 0257 A2000000 		.4byte	.LVL42
+ 2804 025b 0100     		.2byte	0x1
+ 2805 025d 54       		.byte	0x54
+ 2806 025e A2000000 		.4byte	.LVL42
+ 2807 0262 B4000000 		.4byte	.LVL43
+ 2808 0266 0400     		.2byte	0x4
+ 2809 0268 F3       		.byte	0xf3
+ 2810 0269 01       		.uleb128 0x1
+ 2811 026a 51       		.byte	0x51
+ 2812 026b 9F       		.byte	0x9f
+ 2813 026c B4000000 		.4byte	.LVL43
+ 2814 0270 B6000000 		.4byte	.LVL44
+ 2815 0274 0100     		.2byte	0x1
+ 2816 0276 54       		.byte	0x54
+ 2817 0277 B6000000 		.4byte	.LVL44
+ 2818 027b C8000000 		.4byte	.LVL45
+ 2819 027f 0400     		.2byte	0x4
+ 2820 0281 F3       		.byte	0xf3
+ 2821 0282 01       		.uleb128 0x1
+ 2822 0283 51       		.byte	0x51
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 56
+
+
+ 2823 0284 9F       		.byte	0x9f
+ 2824 0285 C8000000 		.4byte	.LVL45
+ 2825 0289 D0000000 		.4byte	.LVL46
+ 2826 028d 0100     		.2byte	0x1
+ 2827 028f 54       		.byte	0x54
+ 2828 0290 D0000000 		.4byte	.LVL46
+ 2829 0294 F4000000 		.4byte	.LVL47
+ 2830 0298 0400     		.2byte	0x4
+ 2831 029a F3       		.byte	0xf3
+ 2832 029b 01       		.uleb128 0x1
+ 2833 029c 51       		.byte	0x51
+ 2834 029d 9F       		.byte	0x9f
+ 2835 029e F4000000 		.4byte	.LVL47
+ 2836 02a2 F6000000 		.4byte	.LVL48
+ 2837 02a6 0100     		.2byte	0x1
+ 2838 02a8 54       		.byte	0x54
+ 2839 02a9 F6000000 		.4byte	.LVL48
+ 2840 02ad 4A010000 		.4byte	.LVL50
+ 2841 02b1 0400     		.2byte	0x4
+ 2842 02b3 F3       		.byte	0xf3
+ 2843 02b4 01       		.uleb128 0x1
+ 2844 02b5 51       		.byte	0x51
+ 2845 02b6 9F       		.byte	0x9f
+ 2846 02b7 4A010000 		.4byte	.LVL50
+ 2847 02bb 4C010000 		.4byte	.LVL51
+ 2848 02bf 0100     		.2byte	0x1
+ 2849 02c1 54       		.byte	0x54
+ 2850 02c2 4C010000 		.4byte	.LVL51
+ 2851 02c6 82010000 		.4byte	.LVL53
+ 2852 02ca 0400     		.2byte	0x4
+ 2853 02cc F3       		.byte	0xf3
+ 2854 02cd 01       		.uleb128 0x1
+ 2855 02ce 51       		.byte	0x51
+ 2856 02cf 9F       		.byte	0x9f
+ 2857 02d0 82010000 		.4byte	.LVL53
+ 2858 02d4 84010000 		.4byte	.LVL54
+ 2859 02d8 0100     		.2byte	0x1
+ 2860 02da 54       		.byte	0x54
+ 2861 02db 84010000 		.4byte	.LVL54
+ 2862 02df CC010000 		.4byte	.LVL56
+ 2863 02e3 0400     		.2byte	0x4
+ 2864 02e5 F3       		.byte	0xf3
+ 2865 02e6 01       		.uleb128 0x1
+ 2866 02e7 51       		.byte	0x51
+ 2867 02e8 9F       		.byte	0x9f
+ 2868 02e9 CC010000 		.4byte	.LVL56
+ 2869 02ed CE010000 		.4byte	.LVL57
+ 2870 02f1 0100     		.2byte	0x1
+ 2871 02f3 54       		.byte	0x54
+ 2872 02f4 CE010000 		.4byte	.LVL57
+ 2873 02f8 48020000 		.4byte	.LFE42
+ 2874 02fc 0400     		.2byte	0x4
+ 2875 02fe F3       		.byte	0xf3
+ 2876 02ff 01       		.uleb128 0x1
+ 2877 0300 51       		.byte	0x51
+ 2878 0301 9F       		.byte	0x9f
+ 2879 0302 00000000 		.4byte	0
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 57
+
+
+ 2880 0306 00000000 		.4byte	0
+ 2881              	.LLST13:
+ 2882 030a 0E000000 		.4byte	.LVL36
+ 2883 030e F8010000 		.4byte	.LVL60
+ 2884 0312 0100     		.2byte	0x1
+ 2885 0314 55       		.byte	0x55
+ 2886 0315 00000000 		.4byte	0
+ 2887 0319 00000000 		.4byte	0
+ 2888              	.LLST14:
+ 2889 031d 0E000000 		.4byte	.LVL36
+ 2890 0321 12000000 		.4byte	.LVL37
+ 2891 0325 0200     		.2byte	0x2
+ 2892 0327 30       		.byte	0x30
+ 2893 0328 9F       		.byte	0x9f
+ 2894 0329 12000000 		.4byte	.LVL37
+ 2895 032d 20000000 		.4byte	.LVL39
+ 2896 0331 0100     		.2byte	0x1
+ 2897 0333 53       		.byte	0x53
+ 2898 0334 00000000 		.4byte	0
+ 2899 0338 00000000 		.4byte	0
+ 2900              		.section	.debug_aranges,"",%progbits
+ 2901 0000 8C000000 		.4byte	0x8c
+ 2902 0004 0200     		.2byte	0x2
+ 2903 0006 00000000 		.4byte	.Ldebug_info0
+ 2904 000a 04       		.byte	0x4
+ 2905 000b 00       		.byte	0
+ 2906 000c 0000     		.2byte	0
+ 2907 000e 0000     		.2byte	0
+ 2908 0010 00000000 		.4byte	.LFB34
+ 2909 0014 0C000000 		.4byte	.LFE34-.LFB34
+ 2910 0018 00000000 		.4byte	.LFB35
+ 2911 001c 0C000000 		.4byte	.LFE35-.LFB35
+ 2912 0020 00000000 		.4byte	.LFB36
+ 2913 0024 0C000000 		.4byte	.LFE36-.LFB36
+ 2914 0028 00000000 		.4byte	.LFB37
+ 2915 002c 0C000000 		.4byte	.LFE37-.LFB37
+ 2916 0030 00000000 		.4byte	.LFB38
+ 2917 0034 0C000000 		.4byte	.LFE38-.LFB38
+ 2918 0038 00000000 		.4byte	.LFB39
+ 2919 003c 0C000000 		.4byte	.LFE39-.LFB39
+ 2920 0040 00000000 		.4byte	.LFB40
+ 2921 0044 0C000000 		.4byte	.LFE40-.LFB40
+ 2922 0048 00000000 		.4byte	.LFB41
+ 2923 004c 0C000000 		.4byte	.LFE41-.LFB41
+ 2924 0050 00000000 		.4byte	.LFB43
+ 2925 0054 46000000 		.4byte	.LFE43-.LFB43
+ 2926 0058 00000000 		.4byte	.LFB44
+ 2927 005c 34000000 		.4byte	.LFE44-.LFB44
+ 2928 0060 00000000 		.4byte	.LFB45
+ 2929 0064 2C000000 		.4byte	.LFE45-.LFB45
+ 2930 0068 00000000 		.4byte	.LFB46
+ 2931 006c 30000000 		.4byte	.LFE46-.LFB46
+ 2932 0070 00000000 		.4byte	.LFB47
+ 2933 0074 28000000 		.4byte	.LFE47-.LFB47
+ 2934 0078 00000000 		.4byte	.LFB48
+ 2935 007c 64000000 		.4byte	.LFE48-.LFB48
+ 2936 0080 00000000 		.4byte	.LFB42
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 58
+
+
+ 2937 0084 48020000 		.4byte	.LFE42-.LFB42
+ 2938 0088 00000000 		.4byte	0
+ 2939 008c 00000000 		.4byte	0
+ 2940              		.section	.debug_ranges,"",%progbits
+ 2941              	.Ldebug_ranges0:
+ 2942 0000 00000000 		.4byte	.LFB34
+ 2943 0004 0C000000 		.4byte	.LFE34
+ 2944 0008 00000000 		.4byte	.LFB35
+ 2945 000c 0C000000 		.4byte	.LFE35
+ 2946 0010 00000000 		.4byte	.LFB36
+ 2947 0014 0C000000 		.4byte	.LFE36
+ 2948 0018 00000000 		.4byte	.LFB37
+ 2949 001c 0C000000 		.4byte	.LFE37
+ 2950 0020 00000000 		.4byte	.LFB38
+ 2951 0024 0C000000 		.4byte	.LFE38
+ 2952 0028 00000000 		.4byte	.LFB39
+ 2953 002c 0C000000 		.4byte	.LFE39
+ 2954 0030 00000000 		.4byte	.LFB40
+ 2955 0034 0C000000 		.4byte	.LFE40
+ 2956 0038 00000000 		.4byte	.LFB41
+ 2957 003c 0C000000 		.4byte	.LFE41
+ 2958 0040 00000000 		.4byte	.LFB43
+ 2959 0044 46000000 		.4byte	.LFE43
+ 2960 0048 00000000 		.4byte	.LFB44
+ 2961 004c 34000000 		.4byte	.LFE44
+ 2962 0050 00000000 		.4byte	.LFB45
+ 2963 0054 2C000000 		.4byte	.LFE45
+ 2964 0058 00000000 		.4byte	.LFB46
+ 2965 005c 30000000 		.4byte	.LFE46
+ 2966 0060 00000000 		.4byte	.LFB47
+ 2967 0064 28000000 		.4byte	.LFE47
+ 2968 0068 00000000 		.4byte	.LFB48
+ 2969 006c 64000000 		.4byte	.LFE48
+ 2970 0070 00000000 		.4byte	.LFB42
+ 2971 0074 48020000 		.4byte	.LFE42
+ 2972 0078 00000000 		.4byte	0
+ 2973 007c 00000000 		.4byte	0
+ 2974              		.section	.debug_line,"",%progbits
+ 2975              	.Ldebug_line0:
+ 2976 0000 EB020000 		.section	.debug_str,"MS",%progbits,1
+ 2976      02006301 
+ 2976      00000201 
+ 2976      FB0E0D00 
+ 2976      01010101 
+ 2977              	.LASF35:
+ 2978 0000 7278616D 		.ascii	"rxamrd\000"
+ 2978      726400
+ 2979              	.LASF29:
+ 2980 0007 43414E5F 		.ascii	"CAN_0_TX_MSG\000"
+ 2980      305F5458 
+ 2980      5F4D5347 
+ 2980      00
+ 2981              	.LASF68:
+ 2982 0014 63616E5F 		.ascii	"can_send\000"
+ 2982      73656E64 
+ 2982      00
+ 2983              	.LASF40:
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 59
+
+
+ 2984 001d 5041434B 		.ascii	"PACK_TEMP_OVER\000"
+ 2984      5F54454D 
+ 2984      505F4F56 
+ 2984      455200
+ 2985              	.LASF27:
+ 2986 002c 43414E5F 		.ascii	"CAN_0_DATA_BYTES\000"
+ 2986      305F4441 
+ 2986      54415F42 
+ 2986      59544553 
+ 2986      00
+ 2987              	.LASF93:
+ 2988 003d 41434B5F 		.ascii	"ACK_RX\000"
+ 2988      525800
+ 2989              	.LASF91:
+ 2990 0044 43555254 		.ascii	"CURTIS_FAULT_CHECK\000"
+ 2990      49535F46 
+ 2990      41554C54 
+ 2990      5F434845 
+ 2990      434B00
+ 2991              	.LASF38:
+ 2992 0057 4E4F5F45 		.ascii	"NO_ERROR\000"
+ 2992      52524F52 
+ 2992      00
+ 2993              	.LASF108:
+ 2994 0060 43794578 		.ascii	"CyExitCriticalSection\000"
+ 2994      69744372 
+ 2994      69746963 
+ 2994      616C5365 
+ 2994      6374696F 
+ 2995              	.LASF79:
+ 2996 0076 63616E5F 		.ascii	"can_test_send\000"
+ 2996      74657374 
+ 2996      5F73656E 
+ 2996      6400
+ 2997              	.LASF70:
+ 2998 0084 73746174 		.ascii	"state\000"
+ 2998      6500
+ 2999              	.LASF2:
+ 3000 008a 73686F72 		.ascii	"short int\000"
+ 3000      7420696E 
+ 3000      7400
+ 3001              	.LASF57:
+ 3002 0094 67657443 		.ascii	"getCurtisFaultCheck\000"
+ 3002      75727469 
+ 3002      73466175 
+ 3002      6C744368 
+ 3002      65636B00 
+ 3003              	.LASF24:
+ 3004 00a8 73697A65 		.ascii	"sizetype\000"
+ 3004      74797065 
+ 3004      00
+ 3005              	.LASF73:
+ 3006 00b1 53657449 		.ascii	"SetInterlock\000"
+ 3006      6E746572 
+ 3006      6C6F636B 
+ 3006      00
+ 3007              	.LASF81:
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 60
+
+
+ 3008 00be 63616E5F 		.ascii	"can_receive\000"
+ 3008      72656365 
+ 3008      69766500 
+ 3009              	.LASF36:
+ 3010 00ca 72786163 		.ascii	"rxacrd\000"
+ 3010      726400
+ 3011              	.LASF80:
+ 3012 00d1 74656D70 		.ascii	"tempAttenuate\000"
+ 3012      41747465 
+ 3012      6E756174 
+ 3012      6500
+ 3013              	.LASF63:
+ 3014 00df 67657450 		.ascii	"getPedalHigh\000"
+ 3014      6564616C 
+ 3014      48696768 
+ 3014      00
+ 3015              	.LASF7:
+ 3016 00ec 5F5F7569 		.ascii	"__uint32_t\000"
+ 3016      6E743332 
+ 3016      5F7400
+ 3017              	.LASF32:
+ 3018 00f7 72786461 		.ascii	"rxdata\000"
+ 3018      746100
+ 3019              	.LASF4:
+ 3020 00fe 5F5F7569 		.ascii	"__uint16_t\000"
+ 3020      6E743136 
+ 3020      5F7400
+ 3021              	.LASF19:
+ 3022 0109 646F7562 		.ascii	"double\000"
+ 3022      6C6500
+ 3023              	.LASF83:
+ 3024 0110 70656461 		.ascii	"pedalOK\000"
+ 3024      6C4F4B00 
+ 3025              	.LASF72:
+ 3026 0118 63616E5F 		.ascii	"can_send_cmd\000"
+ 3026      73656E64 
+ 3026      5F636D64 
+ 3026      00
+ 3027              	.LASF88:
+ 3028 0125 4552524F 		.ascii	"ERROR_NODE\000"
+ 3028      525F4E4F 
+ 3028      444500
+ 3029              	.LASF74:
+ 3030 0130 56434C5F 		.ascii	"VCL_Throttle_High\000"
+ 3030      5468726F 
+ 3030      74746C65 
+ 3030      5F486967 
+ 3030      6800
+ 3031              	.LASF109:
+ 3032 0142 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 3032      43313120 
+ 3032      352E342E 
+ 3032      31203230 
+ 3032      31363036 
+ 3033 0175 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0 -mthumb -g -O"
+ 3033      20726576 
+ 3033      6973696F 
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 61
+
+
+ 3033      6E203233 
+ 3033      37373135 
+ 3034 01a8 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 3034      66756E63 
+ 3034      74696F6E 
+ 3034      2D736563 
+ 3034      74696F6E 
+ 3035              	.LASF37:
+ 3036 01d0 43414E5F 		.ascii	"CAN_0_RX_STRUCT\000"
+ 3036      305F5258 
+ 3036      5F535452 
+ 3036      55435400 
+ 3037              	.LASF12:
+ 3038 01e0 75696E74 		.ascii	"uint8_t\000"
+ 3038      385F7400 
+ 3039              	.LASF61:
+ 3040 01e8 67657441 		.ascii	"getABSMotorRPM\000"
+ 3040      42534D6F 
+ 3040      746F7252 
+ 3040      504D00
+ 3041              	.LASF15:
+ 3042 01f7 75696E74 		.ascii	"uint8\000"
+ 3042      3800
+ 3043              	.LASF96:
+ 3044 01fd 5448524F 		.ascii	"THROTTLE_HIGH\000"
+ 3044      54544C45 
+ 3044      5F484947 
+ 3044      4800
+ 3045              	.LASF104:
+ 3046 020b 63757272 		.ascii	"current_bytes\000"
+ 3046      656E745F 
+ 3046      62797465 
+ 3046      7300
+ 3047              	.LASF41:
+ 3048 0219 53544143 		.ascii	"STACK_FUSE_BROKEN\000"
+ 3048      4B5F4655 
+ 3048      53455F42 
+ 3048      524F4B45 
+ 3048      4E00
+ 3049              	.LASF25:
+ 3050 022b 43414E5F 		.ascii	"CAN_0_DATA_BYTES_MSG\000"
+ 3050      305F4441 
+ 3050      54415F42 
+ 3050      59544553 
+ 3050      5F4D5347 
+ 3051              	.LASF48:
+ 3052 0240 504F535F 		.ascii	"POS_CONT_CLOSED\000"
+ 3052      434F4E54 
+ 3052      5F434C4F 
+ 3052      53454400 
+ 3053              	.LASF18:
+ 3054 0250 666C6F61 		.ascii	"float\000"
+ 3054      7400
+ 3055              	.LASF71:
+ 3056 0256 6572726F 		.ascii	"errorState\000"
+ 3056      72537461 
+ 3056      746500
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 62
+
+
+ 3057              	.LASF9:
+ 3058 0261 6C6F6E67 		.ascii	"long long int\000"
+ 3058      206C6F6E 
+ 3058      6720696E 
+ 3058      7400
+ 3059              	.LASF62:
+ 3060 026f 67657450 		.ascii	"getPedalLow\000"
+ 3060      6564616C 
+ 3060      4C6F7700 
+ 3061              	.LASF65:
+ 3062 027b 48656172 		.ascii	"HeartB\000"
+ 3062      744200
+ 3063              	.LASF20:
+ 3064 0282 63686172 		.ascii	"char\000"
+ 3064      00
+ 3065              	.LASF97:
+ 3066 0287 5448524F 		.ascii	"THROTTLE_LOW\000"
+ 3066      54544C45 
+ 3066      5F4C4F57 
+ 3066      00
+ 3067              	.LASF6:
+ 3068 0294 6C6F6E67 		.ascii	"long int\000"
+ 3068      20696E74 
+ 3068      00
+ 3069              	.LASF102:
+ 3070 029d 766F6C74 		.ascii	"voltage\000"
+ 3070      61676500 
+ 3071              	.LASF82:
+ 3072 02a5 496E7465 		.ascii	"InterruptState\000"
+ 3072      72727570 
+ 3072      74537461 
+ 3072      746500
+ 3073              	.LASF3:
+ 3074 02b4 5F5F7569 		.ascii	"__uint8_t\000"
+ 3074      6E74385F 
+ 3074      7400
+ 3075              	.LASF50:
+ 3076 02be 43454C4C 		.ascii	"CELL_VOLT_OVER\000"
+ 3076      5F564F4C 
+ 3076      545F4F56 
+ 3076      455200
+ 3077              	.LASF90:
+ 3078 02cd 43415041 		.ascii	"CAPACITOR_VOLT\000"
+ 3078      4349544F 
+ 3078      525F564F 
+ 3078      4C5400
+ 3079              	.LASF60:
+ 3080 02dc 67657445 		.ascii	"getErrorTolerance\000"
+ 3080      72726F72 
+ 3080      546F6C65 
+ 3080      72616E63 
+ 3080      6500
+ 3081              	.LASF34:
+ 3082 02ee 72786163 		.ascii	"rxacr\000"
+ 3082      7200
+ 3083              	.LASF23:
+ 3084 02f4 6C6F6E67 		.ascii	"long double\000"
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 63
+
+
+ 3084      20646F75 
+ 3084      626C6500 
+ 3085              	.LASF77:
+ 3086 0300 63686172 		.ascii	"charge\000"
+ 3086      676500
+ 3087              	.LASF85:
+ 3088 0307 5448524F 		.ascii	"THROTTLE_MAP\000"
+ 3088      54544C45 
+ 3088      5F4D4150 
+ 3088      00
+ 3089              	.LASF46:
+ 3090 0314 434F4D5F 		.ascii	"COM_FAILURE\000"
+ 3090      4641494C 
+ 3090      55524500 
+ 3091              	.LASF1:
+ 3092 0320 756E7369 		.ascii	"unsigned char\000"
+ 3092      676E6564 
+ 3092      20636861 
+ 3092      7200
+ 3093              	.LASF111:
+ 3094 032e 433A5C55 		.ascii	"C:\\Users\\Melody\\Desktop\\Programming Stuff\\FRUC"
+ 3094      73657273 
+ 3094      5C4D656C 
+ 3094      6F64795C 
+ 3094      4465736B 
+ 3095 035c 445C4461 		.ascii	"D\\Dashboard-Firmware-FE9\\Dashboard-Firmware-FE9\\"
+ 3095      7368626F 
+ 3095      6172642D 
+ 3095      4669726D 
+ 3095      77617265 
+ 3096 038c 44617368 		.ascii	"Dashboard.cydsn\000"
+ 3096      626F6172 
+ 3096      642E6379 
+ 3096      64736E00 
+ 3097              	.LASF31:
+ 3098 039c 72786964 		.ascii	"rxid\000"
+ 3098      00
+ 3099              	.LASF59:
+ 3100 03a1 67657441 		.ascii	"getAckRx\000"
+ 3100      636B5278 
+ 3100      00
+ 3101              	.LASF30:
+ 3102 03aa 7278636D 		.ascii	"rxcmd\000"
+ 3102      6400
+ 3103              	.LASF0:
+ 3104 03b0 7369676E 		.ascii	"signed char\000"
+ 3104      65642063 
+ 3104      68617200 
+ 3105              	.LASF44:
+ 3106 03bc 43524954 		.ascii	"CRITICAL_SOC\000"
+ 3106      4943414C 
+ 3106      5F534F43 
+ 3106      00
+ 3107              	.LASF10:
+ 3108 03c9 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 3108      206C6F6E 
+ 3108      6720756E 
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 64
+
+
+ 3108      7369676E 
+ 3108      65642069 
+ 3109              	.LASF14:
+ 3110 03e0 75696E74 		.ascii	"uint32_t\000"
+ 3110      33325F74 
+ 3110      00
+ 3111              	.LASF92:
+ 3112 03e9 43555254 		.ascii	"CURTIS_HEART_BEAT_CHECK\000"
+ 3112      49535F48 
+ 3112      45415254 
+ 3112      5F424541 
+ 3112      545F4348 
+ 3113              	.LASF11:
+ 3114 0401 756E7369 		.ascii	"unsigned int\000"
+ 3114      676E6564 
+ 3114      20696E74 
+ 3114      00
+ 3115              	.LASF13:
+ 3116 040e 75696E74 		.ascii	"uint16_t\000"
+ 3116      31365F74 
+ 3116      00
+ 3117              	.LASF53:
+ 3118 0417 46554C4C 		.ascii	"FULL\000"
+ 3118      00
+ 3119              	.LASF8:
+ 3120 041c 6C6F6E67 		.ascii	"long unsigned int\000"
+ 3120      20756E73 
+ 3120      69676E65 
+ 3120      6420696E 
+ 3120      7400
+ 3121              	.LASF56:
+ 3122 042e 67657443 		.ascii	"getCapacitorVoltage\000"
+ 3122      61706163 
+ 3122      69746F72 
+ 3122      566F6C74 
+ 3122      61676500 
+ 3123              	.LASF43:
+ 3124 0442 4C4F575F 		.ascii	"LOW_SOC\000"
+ 3124      534F4300 
+ 3125              	.LASF22:
+ 3126 044a 72656733 		.ascii	"reg32\000"
+ 3126      3200
+ 3127              	.LASF5:
+ 3128 0450 73686F72 		.ascii	"short unsigned int\000"
+ 3128      7420756E 
+ 3128      7369676E 
+ 3128      65642069 
+ 3128      6E7400
+ 3129              	.LASF55:
+ 3130 0463 424D535F 		.ascii	"BMS_STATUS\000"
+ 3130      53544154 
+ 3130      555300
+ 3131              	.LASF69:
+ 3132 046e 63616E5F 		.ascii	"can_send_status\000"
+ 3132      73656E64 
+ 3132      5F737461 
+ 3132      74757300 
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 65
+
+
+ 3133              	.LASF86:
+ 3134 047e 5041434B 		.ascii	"PACK_TEMP\000"
+ 3134      5F54454D 
+ 3134      5000
+ 3135              	.LASF47:
+ 3136 0488 4E45475F 		.ascii	"NEG_CONT_CLOSED\000"
+ 3136      434F4E54 
+ 3136      5F434C4F 
+ 3136      53454400 
+ 3137              	.LASF89:
+ 3138 0498 4552524F 		.ascii	"ERROR_IDX\000"
+ 3138      525F4944 
+ 3138      5800
+ 3139              	.LASF49:
+ 3140 04a2 49534F5F 		.ascii	"ISO_FAULT\000"
+ 3140      4641554C 
+ 3140      5400
+ 3141              	.LASF45:
+ 3142 04ac 494D4241 		.ascii	"IMBALANCE\000"
+ 3142      4C414E43 
+ 3142      4500
+ 3143              	.LASF64:
+ 3144 04b6 64617461 		.ascii	"data\000"
+ 3144      00
+ 3145              	.LASF75:
+ 3146 04bb 56434C5F 		.ascii	"VCL_Throttle_Low\000"
+ 3146      5468726F 
+ 3146      74746C65 
+ 3146      5F4C6F77 
+ 3146      00
+ 3147              	.LASF103:
+ 3148 04cc 626D735F 		.ascii	"bms_status\000"
+ 3148      73746174 
+ 3148      757300
+ 3149              	.LASF54:
+ 3150 04d7 50524543 		.ascii	"PRECHARGE_CLOSED\000"
+ 3150      48415247 
+ 3150      455F434C 
+ 3150      4F534544 
+ 3150      00
+ 3151              	.LASF16:
+ 3152 04e8 75696E74 		.ascii	"uint32\000"
+ 3152      333200
+ 3153              	.LASF21:
+ 3154 04ef 72656738 		.ascii	"reg8\000"
+ 3154      00
+ 3155              	.LASF66:
+ 3156 04f4 6D657373 		.ascii	"message\000"
+ 3156      61676500 
+ 3157              	.LASF17:
+ 3158 04fc 696E7433 		.ascii	"int32\000"
+ 3158      3200
+ 3159              	.LASF52:
+ 3160 0502 43484152 		.ascii	"CHARGE_HAULT\000"
+ 3160      47455F48 
+ 3160      41554C54 
+ 3160      00
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 66
+
+
+ 3161              	.LASF78:
+ 3162 050f 73617665 		.ascii	"save_soc\000"
+ 3162      5F736F63 
+ 3162      00
+ 3163              	.LASF58:
+ 3164 0518 67657443 		.ascii	"getCurtisHeartBeatCheck\000"
+ 3164      75727469 
+ 3164      73486561 
+ 3164      72744265 
+ 3164      61744368 
+ 3165              	.LASF105:
+ 3166 0530 43414E5F 		.ascii	"CAN_0_SendMsg\000"
+ 3166      305F5365 
+ 3166      6E644D73 
+ 3166      6700
+ 3167              	.LASF26:
+ 3168 053e 62797465 		.ascii	"byte\000"
+ 3168      00
+ 3169              	.LASF42:
+ 3170 0543 5041434B 		.ascii	"PACK_TEMP_UNDER\000"
+ 3170      5F54454D 
+ 3170      505F554E 
+ 3170      44455200 
+ 3171              	.LASF110:
+ 3172 0553 63616E5F 		.ascii	"can_manga.c\000"
+ 3172      6D616E67 
+ 3172      612E6300 
+ 3173              	.LASF112:
+ 3174 055f 6D656D73 		.ascii	"memset\000"
+ 3174      657400
+ 3175              	.LASF51:
+ 3176 0566 43454C4C 		.ascii	"CELL_VOLT_UNDER\000"
+ 3176      5F564F4C 
+ 3176      545F554E 
+ 3176      44455200 
+ 3177              	.LASF39:
+ 3178 0576 43484152 		.ascii	"CHARGEMODE\000"
+ 3178      47454D4F 
+ 3178      444500
+ 3179              	.LASF98:
+ 3180 0581 564F4C54 		.ascii	"VOLT_B1\000"
+ 3180      5F423100 
+ 3181              	.LASF99:
+ 3182 0589 564F4C54 		.ascii	"VOLT_B2\000"
+ 3182      5F423200 
+ 3183              	.LASF100:
+ 3184 0591 564F4C54 		.ascii	"VOLT_B3\000"
+ 3184      5F423300 
+ 3185              	.LASF101:
+ 3186 0599 564F4C54 		.ascii	"VOLT_B4\000"
+ 3186      5F423400 
+ 3187              	.LASF107:
+ 3188 05a1 4379456E 		.ascii	"CyEnterCriticalSection\000"
+ 3188      74657243 
+ 3188      72697469 
+ 3188      63616C53 
+ 3188      65637469 
+ARM GAS  C:\Users\Melody\AppData\Local\Temp\ccJcybLC.s 			page 67
+
+
+ 3189              	.LASF95:
+ 3190 05b8 4142535F 		.ascii	"ABS_MOTOR_RPM\000"
+ 3190      4D4F544F 
+ 3190      525F5250 
+ 3190      4D00
+ 3191              	.LASF94:
+ 3192 05c6 4552524F 		.ascii	"ERROR_TOLERANCE\000"
+ 3192      525F544F 
+ 3192      4C455241 
+ 3192      4E434500 
+ 3193              	.LASF106:
+ 3194 05d6 43794465 		.ascii	"CyDelay\000"
+ 3194      6C617900 
+ 3195              	.LASF28:
+ 3196 05de 43414E5F 		.ascii	"CAN_0_REG_32\000"
+ 3196      305F5245 
+ 3196      475F3332 
+ 3196      00
+ 3197              	.LASF33:
+ 3198 05eb 7278616D 		.ascii	"rxamr\000"
+ 3198      7200
+ 3199              	.LASF76:
+ 3200 05f1 63616E5F 		.ascii	"can_send_charge\000"
+ 3200      73656E64 
+ 3200      5F636861 
+ 3200      72676500 
+ 3201              	.LASF84:
+ 3202 0601 5448524F 		.ascii	"THROTTLE_MULTIPLIER\000"
+ 3202      54544C45 
+ 3202      5F4D554C 
+ 3202      5449504C 
+ 3202      49455200 
+ 3203              	.LASF87:
+ 3204 0615 43555252 		.ascii	"CURRENT\000"
+ 3204      454E5400 
+ 3205              	.LASF67:
+ 3206 061d 7061796C 		.ascii	"payload\000"
+ 3206      6F616400 
+ 3207              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran
