@@ -1,0 +1,6 @@
+D:\Users\leoja\Documents\GitHub\Dashboard-Firmware-FE9-CURSED\Dashboard-Firmware-FE9\Dashboard.cydsn\Dashboard.cyprj|2f655517-04c4-468d-9854-69100e3c3d31
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\default\CyAnnotationLibrary\CyAnnotationLibrary.cylib\CyAnnotationLibrary.cyprj|d6d188fa-fd71-4b9a-9523-11dc48d1fa6b
+D:\Users\leoja\Documents\PSoC Creator\4.4\Downloads ( 4.4).cylib\Downloads ( 4.4).cyprj|7b85b69f-6b85-4ec0-93ba-cccba87aa74a
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cycomponentlibraryupdates\CyComponentLibraryUpdates.cylib\CyComponentLibraryUpdates.cyprj|7c437594-3b57-418b-a1cb-e772059e5b97
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cycomponentlibrary\CyComponentLibrary.cylib\CyComponentLibrary.cyprj|bf3ac0f0-a3a6-4e6b-996f-6c6bcc2055a5
+C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cyprimitives\CyPrimitives.cylib\CyPrimitives.cyprj|063bc755-70a2-4c4a-80d5-5792a4fa5ca8

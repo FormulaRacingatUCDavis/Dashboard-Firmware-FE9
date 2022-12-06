@@ -1,0 +1,18 @@
+D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/CortexM0/ARM_GCC_541/Debug/cyfitter_cfg.o : D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/CyLFClk.h D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/CyLib.h D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/cydevice_trm.h D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/cyfitter.h D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/cyfitter_cfg.c D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/cyfitter_cfg.h D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/cytypes.h D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/cyapicallbacks.h 
+
+D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/CyLFClk.h : 
+
+D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/CyLib.h : 
+
+D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/cydevice_trm.h : 
+
+D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/cyfitter.h : 
+
+D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/cyfitter_cfg.c : 
+
+D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/cyfitter_cfg.h : 
+
+D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/Generated_Source/PSoC4/cytypes.h : 
+
+D:/Users/leoja/Documents/GitHub/Dashboard-Firmware-FE9-CURSED/Dashboard-Firmware-FE9/Dashboard.cydsn/cyapicallbacks.h : 
+
